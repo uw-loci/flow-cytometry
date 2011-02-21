@@ -66,6 +66,10 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>loci.maven.plugins</groupId>
+        <artifactId>cppwrap-maven-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
