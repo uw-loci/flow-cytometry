@@ -115,7 +115,7 @@ public class Particle {
 
   public int getMeanIntensity() {
     if (pixelArea==0) return 0;
-    else return totalIntensity/pixelArea;
+    return totalIntensity/pixelArea;
   }
 
   public int getCentroidY() {

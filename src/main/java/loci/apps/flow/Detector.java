@@ -92,7 +92,7 @@ public class Detector {
     IJ.run("Despeckle");
     //IJ.run("Haar wavelet filter", "k1=3 k2=3 k3=3 std=1.6");
 
-    d.findParticles((ByteProcessor) Detector.imp3.getProcessor());
+    d.findParticles(Detector.imp3.getProcessor());
     d.crunchArray();
     displayImage(d.floodArray);
   }
@@ -179,14 +179,14 @@ public class Detector {
     impParticles.show();
   }
 
-  private int fillParticles(int[][] floodArray) {
+  private int fillParticles(int[][] floodArr) {
     int num = 2;
     for (int i=0; i<size; i++) {
       for (int j=0; j<size; j++) {
-        if (floodArray[i][j]==0) continue;
-        if (floodArray[i][j]==1) {
+        if (floodArr[i][j]==0) continue;
+        if (floodArr[i][j]==1) {
           //System.out.println("Starting flood fill "+num+" at ("+i+", "+j+")");
-          heuristicFloodFill(floodArray, i, j, num++);
+          heuristicFloodFill(floodArr, i, j, num++);
         }
       }
     }

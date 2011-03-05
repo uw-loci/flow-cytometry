@@ -71,13 +71,12 @@ import loci.common.services.ServiceException;
 import loci.common.services.ServiceFactory;
 import loci.formats.FormatException;
 import loci.formats.ImageWriter;
-import loci.formats.MetadataTools;
 import loci.formats.ome.OMEXMLMetadata;
 import loci.formats.services.OMEXMLService;
-
-import ome.xml.model.enums.*;
-import ome.xml.model.primitives.*;
-
+import ome.xml.model.enums.DimensionOrder;
+import ome.xml.model.enums.EnumerationException;
+import ome.xml.model.enums.PixelType;
+import ome.xml.model.primitives.PositiveInteger;
 import visad.DataReferenceImpl;
 import visad.Display;
 import visad.DisplayImpl;
@@ -209,10 +208,12 @@ public class FlowCytometry {
       stack.deleteSlice(1);
     }
     else if (nSlices == 2) {
-      ImageWindow stackwin = ((ImageWindow) imp.getWindow());
+      ImageWindow stackwin = imp.getWindow();
       scroll = (Scrollbar) stackwin.getComponent(1);
 
       AdjustmentListener l = new AdjustmentListener() {
+        @SuppressWarnings("synthetic-access")
+        @Override
         public void adjustmentValueChanged(AdjustmentEvent arg0) {
           try {
             int slideNum =
@@ -238,8 +239,12 @@ public class FlowCytometry {
             //Intensity_.this.data_ref.setData(
             //  getData(imp.getCurrentSlice(), cumulative, intensity, fn));
           }
-          catch (RemoteException e) {}
-          catch (VisADException e) {}
+          catch (RemoteException e) {
+            // ignore exceptions
+          }
+          catch (VisADException e) {
+            // ignore exceptions
+          }
         }
       };
       scroll.addAdjustmentListener(l);
@@ -332,13 +337,21 @@ public class FlowCytometry {
       frame.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
 
       ItemListener CBitemListener = new ItemListener() {
+        @SuppressWarnings("synthetic-access")
+        @Override
         public void itemStateChanged(ItemEvent itemEvent) {
           cumulative = itemEvent.getStateChange() == ItemEvent.SELECTED;
           try {
             FlowCytometry.data_ref.setData(newestGetData(
               imp.getCurrentSlice(), cumulative, intensity, fn));
             FlowCytometry.display.reDisplayAll();
-          } catch (RemoteException e) {} catch (VisADException e) {}
+          }
+          catch (RemoteException e) {
+            // ignore exceptions
+          }
+          catch (VisADException e) {
+            // ignore exceptions
+          }
         }
       };
       CBcumulative.addItemListener(CBitemListener);
@@ -461,12 +474,11 @@ public class FlowCytometry {
       service = factory.getInstance(OMEXMLService.class);
       omexmlMeta = service.createOMEXMLMetadata();
     }
-    catch (DependencyException e) { exc = e; }
-    catch (ServiceException e) { exc = e; }
-
-    if (exc != null) {
-      IJ.log("Could not create OMEXMLMetadataStore: " + exc.getMessage());
-      exc = null;
+    catch (DependencyException e) {
+      throw new FormatException("Could not create OMEXMLMetadataStore", exc);
+    }
+    catch (ServiceException e) {
+      throw new FormatException("Could not create OMEXMLMetadataStore", exc);
     }
 
     omexmlMeta.createRoot();
@@ -479,12 +491,16 @@ public class FlowCytometry {
     try {
       omexmlMeta.setPixelsType(PixelType.fromString("uint8"), 0);
     }
-    catch (EnumerationException e) { }
+    catch (EnumerationException e) {
+      throw new FormatException(e);
+    }
     omexmlMeta.setPixelsBinDataBigEndian(Boolean.FALSE, 0, 0);
     try {
       omexmlMeta.setPixelsDimensionOrder(DimensionOrder.fromString("XYTZC"), 0);
     }
-    catch (EnumerationException e) { }
+    catch (EnumerationException e) {
+      throw new FormatException(e);
+    }
     omexmlMeta.setExperimenterFirstName(s_Name, 0);
 
     iw.setMetadataRetrieve(omexmlMeta);
@@ -617,8 +633,7 @@ public class FlowCytometry {
 
     //Do something with the x-position and flow rate here.
 
-    if (nMatches > 2) return true;
-    else return false;
+    return nMatches > 2;
   }
 
   public static void newProcessFrame() {
@@ -656,9 +671,9 @@ public class FlowCytometry {
     rt = Analyzer.getResultsTable();
     double totalArea=0, totalIntensity=0;
     for (int j=0; j<rt.getCounter(); j++) {
-      double area = rt.getValue("Area", j);
-      totalArea += area;
-      totalIntensity += (rt.getValue("Mean", j))*area;
+      double jArea = rt.getValue("Area", j);
+      totalArea += jArea;
+      totalIntensity += (rt.getValue("Mean", j))*jArea;
     }
     if (totalArea > maxArea) maxArea = totalArea;
     if (totalArea < minArea) minArea = totalArea;
@@ -682,15 +697,13 @@ public class FlowCytometry {
     double areaRange = (maxArea - minArea);///pixelMicronSquared;
 
     if (minX !=0) return minX;
-    else {
-      switch (xAxis) {
-        case AREA_AXIS:
-          return (minArea - 0.05*areaRange);
-        case INTENSITY_AXIS:
-          return MIN_INTENSITY;
-        default:
-          return (minArea - 0.05*areaRange);
-      }
+    switch (xAxis) {
+      case AREA_AXIS:
+        return (minArea - 0.05*areaRange);
+      case INTENSITY_AXIS:
+        return MIN_INTENSITY;
+      default:
+        return (minArea - 0.05*areaRange);
     }
   }
 
@@ -698,15 +711,13 @@ public class FlowCytometry {
     double areaRange = (maxArea - minArea);///pixelMicronSquared;
 
     if (maxX !=0) return maxX;
-    else {
-      switch (xAxis) {
-        case AREA_AXIS:
-          return (maxArea+0.05*areaRange);
-        case INTENSITY_AXIS:
-          return MAX_INTENSITY;
-        default:
-          return (maxArea+0.05*areaRange);
-      }
+    switch (xAxis) {
+      case AREA_AXIS:
+        return (maxArea+0.05*areaRange);
+      case INTENSITY_AXIS:
+        return MAX_INTENSITY;
+      default:
+        return (maxArea+0.05*areaRange);
     }
   }
 
@@ -715,18 +726,16 @@ public class FlowCytometry {
     double retval;
 
     if (minY !=0) return minY;
-    else {
-      switch(yAxis) {
-        case AREA_AXIS:
-          retval = (minArea - 0.05*areaRange);
-          break;
-        case INTENSITY_AXIS:
-          retval = MIN_INTENSITY;
-          break;
-        default:
-          retval = (minArea - 0.05*areaRange);
-          break;
-      }
+    switch(yAxis) {
+      case AREA_AXIS:
+        retval = (minArea - 0.05*areaRange);
+        break;
+      case INTENSITY_AXIS:
+        retval = MIN_INTENSITY;
+        break;
+      default:
+        retval = (minArea - 0.05*areaRange);
+        break;
     }
 
     if (b_logY) {
@@ -734,9 +743,9 @@ public class FlowCytometry {
         debug("getMinY() returning 0 (in log case)");
         return 0;
       }
-      else return Math.log(retval);
+      return Math.log(retval);
     }
-    else return retval;
+    return retval;
   }
 
   private static double getMaxY() {
@@ -744,25 +753,23 @@ public class FlowCytometry {
     double retval;
 
     if (maxY !=0) return maxY;
-    else {
-      switch (yAxis) {
-        case AREA_AXIS:
-          retval = (maxArea+0.05*areaRange);
-          break;
-        case INTENSITY_AXIS:
-          retval = MAX_INTENSITY;
-          break;
-        default:
-          retval = (maxArea+0.05*areaRange);
-          break;
-      }
+    switch (yAxis) {
+      case AREA_AXIS:
+        retval = (maxArea+0.05*areaRange);
+        break;
+      case INTENSITY_AXIS:
+        retval = MAX_INTENSITY;
+        break;
+      default:
+        retval = (maxArea+0.05*areaRange);
+        break;
     }
 
     if (b_logY) {
       if (retval < 0) return 0;
-      else return Math.log(retval);
+      return Math.log(retval);
     }
-    else return retval;
+    return retval;
   }
 
   //public static void oldupdateGraph() {
@@ -798,13 +805,13 @@ public class FlowCytometry {
     }
   }
 
-  public static FlatField newestGetData(int slice, boolean cumulative,
-    RealType x, FunctionType fn)
+  public static FlatField newestGetData(int slice, boolean cumul,
+    RealType x, FunctionType funcType)
   {
     //slice is NOT zero-indexed.
     double[] xArray, yArray;
     int beginSlice=0, endSlice=slice-1;
-    if (!cumulative) beginSlice = slice-1;
+    if (!cumul) beginSlice = slice-1;
     int beginIndex = Integer.MAX_VALUE;
     int endIndex = Integer.MIN_VALUE;
     int numParticles=0;
@@ -901,7 +908,7 @@ public class FlowCytometry {
     FlatField ff=null;
     if (xArray.length > 0) try {
       xSet = new List1DDoubleSet(xArray, x, null, null);
-      ff = new FlatField(fn, xSet);
+      ff = new FlatField(funcType, xSet);
       double[][] ff_vals = new double[1][xArray.length];
       ff_vals[0] = yArray;
       ff.setSamples(ff_vals);
@@ -916,12 +923,12 @@ public class FlowCytometry {
   }
 
   public static FlatField newGetData(int slice,
-    boolean cumulative, RealType x, FunctionType fn)
+    boolean cumul, RealType x, FunctionType funcType)
   {
     //slice is NOT zero-indexed.
     double[] xArray, yArray;
     int beginIndex=0, endIndex;
-    if (!cumulative) beginIndex = slice-1;
+    if (!cumul) beginIndex = slice-1;
     endIndex = slice-1;
     xArray = new double[endIndex - beginIndex + 1];
     yArray = new double[endIndex - beginIndex + 1];
@@ -944,7 +951,7 @@ public class FlowCytometry {
     FlatField ff=null;
     if (endIndex >= beginIndex) try {
       xSet = new List1DDoubleSet(xArray, x, null, null);
-      ff = new FlatField(fn, xSet);
+      ff = new FlatField(funcType, xSet);
       double[][] ff_vals = new double[1][xArray.length];
       ff_vals[0] = yArray;
       ff.setSamples(ff_vals);
@@ -959,11 +966,11 @@ public class FlowCytometry {
   }
 
   public static FlatField getData(int slice,
-    boolean cumulative, RealType x, FunctionType fn)
+    boolean cumul, RealType x, FunctionType funcType)
   {
     double[] xArray, yArray;
     int beginIndex=0, endIndex;
-    if (!cumulative) beginIndex = sliceBegin.get(slice);
+    if (!cumul) beginIndex = sliceBegin.get(slice);
     endIndex = sliceEnd.get(slice);
     xArray = new double[endIndex - beginIndex + 1];
     yArray = new double[endIndex - beginIndex + 1];
@@ -984,7 +991,7 @@ public class FlowCytometry {
     if (endIndex >= beginIndex) {
       try {
         intensitySet = new List1DDoubleSet(xArray, x, null, null);
-        ff = new FlatField(fn, intensitySet);
+        ff = new FlatField(funcType, intensitySet);
         double[][] ff_vals = new double[1][xArray.length];
         ff_vals[0] = yArray;
         ff.setSamples(ff_vals);
@@ -1027,9 +1034,9 @@ public class FlowCytometry {
   }
 
   public static void processFile(String filename) throws IOException {
-    ImagePlus imp = IJ.openImage(filename);
-    ImageStack stack = imp.getStack(); //TODO : Handle exception here.
-    int size = imp.getWidth();
+    ImagePlus imagePlus = IJ.openImage(filename);
+    ImageStack imageStack = imagePlus.getStack(); // TODO: handle exception
+    int size = imagePlus.getWidth();
 
     double PixelsPerMicron = Double.valueOf(IJ.getString(
       "Please enter the pixels/micron value for this analysis", "0.1"));
@@ -1037,12 +1044,12 @@ public class FlowCytometry {
 
     // Close the other open windows
     if (frame != null) frame.dispose();
-    if (imp != null) imp.close();
+    imagePlus.close();
 
     init(size, size, PixelsPerMicron);
     showParticles(true);
-    for (int i=1; i<=stack.getSize(); i++) {
-      byte[] imageData = (byte[]) stack.getPixels(i);
+    for (int i=1; i<=imageStack.getSize(); i++) {
+      byte[] imageData = (byte[]) imageStack.getPixels(i);
       incrementSlices();
       showImage(size, size, imageData);
       newestProcessFrame(i);
