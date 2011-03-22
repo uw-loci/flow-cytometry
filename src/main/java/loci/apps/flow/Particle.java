@@ -38,8 +38,8 @@ package loci.apps.flow;
  * TODO
  *
  * <dl><dt><b>Source code:</b></dt>
- * <dd><a href="http://dev.loci.wisc.edu/trac/java/browser/trunk/projects/flow-cytometry/src/main/java/loci/apps/flow/Particle.java">Trac</a>,
- * <a href="http://dev.loci.wisc.edu/svn/java/trunk/projects/flow-cytometry/src/main/java/apps/flow/Particle.java">SVN</a></dd></dl>
+ * <dd><a href="http://dev.loci.wisc.edu/trac/software/browser/trunk/projects/flow-cytometry/src/main/java/loci/apps/flow/Particle.java">Trac</a>,
+ * <a href="http://dev.loci.wisc.edu/svn/software/trunk/projects/flow-cytometry/src/main/java/loci/apps/flow/Particle.java">SVN</a></dd></dl>
  *
  * @author Hidayath Ansari
  */

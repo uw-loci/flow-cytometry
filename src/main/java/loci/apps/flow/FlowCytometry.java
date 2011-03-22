@@ -92,8 +92,8 @@ import visad.java2d.DisplayImplJ2D;
  * TODO
  *
  * <dl><dt><b>Source code:</b></dt>
- * <dd><a href="http://dev.loci.wisc.edu/trac/java/browser/trunk/projects/flow-cytometry/src/main/java/loci/apps/flow/Slice.java">Trac</a>,
- * <a href="http://dev.loci.wisc.edu/svn/java/trunk/projects/flow-cytometry/src/main/java/apps/flow/Slice.java">SVN</a></dd></dl>
+ * <dd><a href="http://dev.loci.wisc.edu/trac/software/browser/trunk/projects/flow-cytometry/src/main/java/loci/apps/flow/FlowCytometry.java">Trac</a>,
+ * <a href="http://dev.loci.wisc.edu/svn/software/trunk/projects/flow-cytometry/src/main/java/loci/apps/flow/FlowCytometry.java">SVN</a></dd></dl>
  *
  * @author Hidayath Ansari
  */
