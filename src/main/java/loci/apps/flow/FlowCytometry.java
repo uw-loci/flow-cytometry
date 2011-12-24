@@ -196,7 +196,7 @@ public class FlowCytometry {
 	
 	//ajeet
 	public static int[] getBFParticleAreas(){
-		IJ.runPlugIn("My_Plugin", null);
+		IJ.runPlugIn("flow bfParticleAreas", null);
 
 		RoiManager rm = RoiManager.getInstance();
 		int lenghtOfRoiTable =rm.getRoisAsArray().length;
