@@ -194,20 +194,6 @@ public class FlowCytometry {
 		nSlices++;
 	}
 	
-	//ajeet
-	public static int[] getBFParticleAreas(){
-		IJ.runPlugIn("flow bfParticleAreas", null);
-
-		RoiManager rm = RoiManager.getInstance();
-		int lenghtOfRoiTable =rm.getRoisAsArray().length;
-		int[] retVal = new int[lenghtOfRoiTable];
-
-		for (int i = 0; i < lenghtOfRoiTable; i++){
-			retVal[i] = Integer.parseInt(IJ.runMacro("getResults(\"Area\", i)", null));
-		}
-
-		return retVal;
-	}
 	
 	/*
 	public static void showImageForBrightfield(int width, int height, byte[] imageData) {
@@ -646,14 +632,22 @@ public class FlowCytometry {
 		}
 		return micronAreas;
 	}
-
+	
 	//ajeet
-	public static int[] getBrightfieldMicronAreas(){
-		//TO DO get particle areas in brightfield and return
-		//area of those areas in microns
+		public static int[] getBFParticleAreas(){
+			IJ.runPlugIn("flow bfParticleAreas", null);
 
-		return null;
-	}
+			RoiManager rm = RoiManager.getInstance();
+			int lenghtOfRoiTable =rm.getRoisAsArray().length;
+			int[] retVal = new int[lenghtOfRoiTable];
+
+			for (int i = 0; i < lenghtOfRoiTable; i++){
+				retVal[i] = Integer.parseInt(IJ.runMacro("getResults(\"Area\", i)", null));
+			}
+
+			return retVal;
+		}
+		
 
 	private static boolean addParticle(Particle particle) {
 		int particleIndex = particles.size()-1;
