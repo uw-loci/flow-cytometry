@@ -38,10 +38,15 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.WindowManager;
 import ij.gui.ImageWindow;
+import ij.measure.Measurements;
 import ij.measure.ResultsTable;
 import ij.plugin.filter.Analyzer;
+import ij.plugin.filter.GaussianBlur;
+import ij.plugin.filter.ParticleAnalyzer;
 import ij.plugin.frame.RoiManager;
+import ij.process.AutoThresholder;
 import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 import java.awt.BorderLayout;
@@ -193,8 +198,8 @@ public class FlowCytometry {
 	public static void incrementSlices() {
 		nSlices++;
 	}
-	
-	
+
+
 	/*
 	public static void showImageForBrightfield(int width, int height, byte[] imageData) {
 		//bp = new ByteProcessor(width,height,imageData,
@@ -252,7 +257,7 @@ public class FlowCytometry {
 			scroll2.addAdjustmentListener(l);
 		}
 	}
-*/
+	 */
 	public static void showImage(int width, int height, byte[] imageData) {
 		//bp = new ByteProcessor(width,height,imageData,
 		//  ImageTools.makeColorModel(1, DataBuffer.TYPE_BYTE));
@@ -632,22 +637,56 @@ public class FlowCytometry {
 		}
 		return micronAreas;
 	}
-	
-	//ajeet
-		public static int[] getBFParticleAreas(){
-			IJ.runPlugIn("flow bfParticleAreas", null);
 
-			RoiManager rm = RoiManager.getInstance();
-			int lenghtOfRoiTable =rm.getRoisAsArray().length;
+	//ajeet
+	public static int[] getBFParticleAreas(){
+		ImagePlus img = WindowManager.getCurrentImage();
+		//	IJ.runPlugIn("bf ParticleAreasPlugin", null);
+		ImageProcessor imgProc = img.getProcessor();
+
+		imgProc.findEdges();
+		imgProc.findEdges();
+
+		GaussianBlur gb = new GaussianBlur();
+		gb.blur(imgProc, 5);
+
+		AutoThresholder thresh = new AutoThresholder();
+		thresh.getThreshold(AutoThresholder.Method.valueOf("Minimum"), imgProc.getHistogram());
+
+		RoiManager rm = new RoiManager(true);
+		ResultsTable rt = new ResultsTable();
+		img = new ImagePlus("thresholdedImage", imgProc);
+		ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER | ParticleAnalyzer.CLEAR_WORKSHEET | ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES | ParticleAnalyzer.INCLUDE_HOLES, Measurements.AREA, rt, 0, Double.POSITIVE_INFINITY, 0, 1);
+		int lenghtOfRoiTable = 0;
+
+		if (pa.analyze(img)){
+			lenghtOfRoiTable = rm.getRoisAsArray().length;
+
 			int[] retVal = new int[lenghtOfRoiTable];
+			double[] temp = rt.getColumnAsDoubles(0);
 
 			for (int i = 0; i < lenghtOfRoiTable; i++){
-				retVal[i] = Integer.parseInt(IJ.runMacro("getResults(\"Area\", i)", null));
+				retVal[i]=(int)temp[i];
 			}
+
+			rm.dispose();
+			rt.reset();
+			img.flush();
+			img.close();
 
 			return retVal;
 		}
-		
+
+		rm.dispose();
+		rt.reset();
+		img.flush();
+		img.close();
+
+		return null;
+
+
+	}
+
 
 	private static boolean addParticle(Particle particle) {
 		int particleIndex = particles.size()-1;
