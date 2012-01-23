@@ -642,7 +642,7 @@ public class FlowCytometry {
 	public static int[] getBFParticleAreas(){
 
 		//	IJ.runPlugIn("bf ParticleAreasPlugin", null);
-/*		ImageProcessor imgProc = img.getProcessor();
+		/*		ImageProcessor imgProc = img.getProcessor();
 
 		imgProc.findEdges();
 		imgProc.findEdges();
@@ -676,27 +676,35 @@ public class FlowCytometry {
 
 			return retVal;
 		}
-*/
+		 */
 		ImagePlus currentImg = WindowManager.getCurrentImage();
 		IJ.run("bf ParticleAreasPlugin");
 
 		RoiManager rm = RoiManager.getInstance();
 		ResultsTable rt = ResultsTable.getResultsTable();
 
-		int lenghtOfRoiTable = rm.getRoisAsArray().length;
+		int lengthOfRoiTable = rm.getRoisAsArray().length;
+		int[] retVal = null;
+		
+		if (lengthOfRoiTable!=(Integer)null ){
 
-		int[] retVal = new int[lenghtOfRoiTable];
-		float[] temp = rt.getColumn(rt.getColumnIndex("Area"));
+			retVal = new int[lengthOfRoiTable];
+			float[] temp = rt.getColumn(rt.getColumnIndex("Area"));
 
-		for (int i = 0; i < lenghtOfRoiTable; i++){
-			retVal[i]=(int)temp[i];
+			if(temp!=null && retVal!=null){
+				for (int i = 0; i < lengthOfRoiTable; i++){
+					retVal[i]=(int)temp[i];
+				}
+
+				rm.dispose();
+				rt.reset();
+				currentImg.flush();
+				currentImg.close();
+
+				return retVal;
+			}
 		}
-		
-		rm.dispose();
-		rt.reset();
-		currentImg.flush();
-		currentImg.close();
-		
+		retVal[0]=0;
 		return retVal;
 	}
 
