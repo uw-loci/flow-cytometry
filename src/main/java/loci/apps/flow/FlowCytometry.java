@@ -640,9 +640,9 @@ public class FlowCytometry {
 
 	//ajeet
 	public static int[] getBFParticleAreas(){
-		ImagePlus img = WindowManager.getCurrentImage();
+
 		//	IJ.runPlugIn("bf ParticleAreasPlugin", null);
-		ImageProcessor imgProc = img.getProcessor();
+/*		ImageProcessor imgProc = img.getProcessor();
 
 		imgProc.findEdges();
 		imgProc.findEdges();
@@ -676,15 +676,28 @@ public class FlowCytometry {
 
 			return retVal;
 		}
+*/
+		ImagePlus currentImg = WindowManager.getCurrentImage();
+		IJ.run("bf ParticleAreasPlugin");
 
+		RoiManager rm = RoiManager.getInstance();
+		ResultsTable rt = ResultsTable.getResultsTable();
+
+		int lenghtOfRoiTable = rm.getRoisAsArray().length;
+
+		int[] retVal = new int[lenghtOfRoiTable];
+		float[] temp = rt.getColumn(rt.getColumnIndex("Area"));
+
+		for (int i = 0; i < lenghtOfRoiTable; i++){
+			retVal[i]=(int)temp[i];
+		}
+		
 		rm.dispose();
 		rt.reset();
-		img.flush();
-		img.close();
-
-		return null;
-
-
+		currentImg.flush();
+		currentImg.close();
+		
+		return retVal;
 	}
 
 
