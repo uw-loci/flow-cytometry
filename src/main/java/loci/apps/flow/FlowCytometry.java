@@ -677,32 +677,38 @@ public class FlowCytometry {
 			return retVal;
 		}
 		 */
-		ImagePlus currentImg = WindowManager.getCurrentImage();
-		IJ.run("bf ParticleAreasPlugin");
 
-		RoiManager rm = RoiManager.getInstance();
-		ResultsTable rt = ResultsTable.getResultsTable();
-
-		int lengthOfRoiTable = rm.getRoisAsArray().length;
 		int[] retVal = null;
-		
-		if (lengthOfRoiTable!=(Integer)null ){
 
-			retVal = new int[lengthOfRoiTable];
-			float[] temp = rt.getColumn(rt.getColumnIndex("Area"));
+		try{
+//			ImagePlus currentImg = WindowManager.getCurrentImage();
+			IJ.run("bf ParticleAreasPlugin");
 
-			if(temp!=null && retVal!=null){
-				for (int i = 0; i < lengthOfRoiTable; i++){
-					retVal[i]=(int)temp[i];
+			RoiManager rm = RoiManager.getInstance();
+			ResultsTable rt = ResultsTable.getResultsTable();
+
+			int lengthOfRoiTable = rm.getRoisAsArray().length;
+
+			if (lengthOfRoiTable!=(Integer)null ){
+
+				retVal = new int[lengthOfRoiTable];
+				float[] temp = rt.getColumn(rt.getColumnIndex("Area"));
+
+				if(temp!=null && retVal!=null){
+					for (int i = 0; i < lengthOfRoiTable; i++){
+						retVal[i]=(int)temp[i];
+					}
+
+//					rm.dispose();
+//					rt.reset();
+//					currentImg.flush();
+//					currentImg.close();
+
+					return retVal;
 				}
-
-				rm.dispose();
-				rt.reset();
-				currentImg.flush();
-				currentImg.close();
-
-				return retVal;
 			}
+		}catch (Exception e){
+
 		}
 		retVal[0]=0;
 		return retVal;
