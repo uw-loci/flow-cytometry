@@ -641,55 +641,18 @@ public class FlowCytometry {
 	//ajeet
 	public static int[] getBFParticleAreas(){
 
-		//	IJ.runPlugIn("bf ParticleAreasPlugin", null);
-		/*		ImageProcessor imgProc = img.getProcessor();
-
-		imgProc.findEdges();
-		imgProc.findEdges();
-
-		GaussianBlur gb = new GaussianBlur();
-		gb.blur(imgProc, 5);
-
-		AutoThresholder thresh = new AutoThresholder();
-		thresh.getThreshold(AutoThresholder.Method.valueOf("Minimum"), imgProc.getHistogram());
-
-		RoiManager rm = new RoiManager(true);
-		ResultsTable rt = new ResultsTable();
-		img = new ImagePlus("thresholdedImage", imgProc);
-		ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.ADD_TO_MANAGER | ParticleAnalyzer.CLEAR_WORKSHEET | ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES | ParticleAnalyzer.INCLUDE_HOLES, Measurements.AREA, rt, 0, Double.POSITIVE_INFINITY, 0, 1);
-		int lenghtOfRoiTable = 0;
-
-		if (pa.analyze(img)){
-			lenghtOfRoiTable = rm.getRoisAsArray().length;
-
-			int[] retVal = new int[lenghtOfRoiTable];
-			double[] temp = rt.getColumnAsDoubles(0);
-
-			for (int i = 0; i < lenghtOfRoiTable; i++){
-				retVal[i]=(int)temp[i];
-			}
-
-			rm.dispose();
-			rt.reset();
-			img.flush();
-			img.close();
-
-			return retVal;
-		}
-		 */
-
-		int[] retVal = null;
+		int[] retVal = new int[1];
 
 		try{
 //			ImagePlus currentImg = WindowManager.getCurrentImage();
-			IJ.run("bf ParticleAreasPlugin");
-
-			RoiManager rm = RoiManager.getInstance();
+//			IJ.run("bf ParticleAreasPlugin");
+			IJ.runPlugIn("bf ParticleAreasPlugin", null);
+//			RoiManager rm = RoiManager.getInstance();
 			ResultsTable rt = ResultsTable.getResultsTable();
 
-			int lengthOfRoiTable = rm.getRoisAsArray().length;
-
-			if (lengthOfRoiTable!=(Integer)null ){
+			int lengthOfRoiTable = RoiManager.getInstance().getCount();
+			
+			if (lengthOfRoiTable!=0){
 
 				retVal = new int[lengthOfRoiTable];
 				float[] temp = rt.getColumn(rt.getColumnIndex("Area"));
@@ -698,17 +661,11 @@ public class FlowCytometry {
 					for (int i = 0; i < lengthOfRoiTable; i++){
 						retVal[i]=(int)temp[i];
 					}
-
-//					rm.dispose();
-//					rt.reset();
-//					currentImg.flush();
-//					currentImg.close();
-
 					return retVal;
 				}
 			}
 		}catch (Exception e){
-
+			//fall through
 		}
 		retVal[0]=0;
 		return retVal;
