@@ -645,12 +645,14 @@ public class FlowCytometry {
 
 		try{
 //			ImagePlus currentImg = WindowManager.getCurrentImage();
-//			IJ.run("bf ParticleAreasPlugin");
-			IJ.runPlugIn("bf ParticleAreasPlugin", null);
-//			RoiManager rm = RoiManager.getInstance();
+			IJ.run("bf ParticleAreasPlugin");
+//			IJ.runPlugIn("bf ParticleAreasPlugin", null);
+			RoiManager rm = RoiManager.getInstance();
 			ResultsTable rt = ResultsTable.getResultsTable();
 
-			int lengthOfRoiTable = RoiManager.getInstance().getCount();
+			int lengthOfRoiTable = rm.getCount();
+			rm.runCommand("Deselect");
+			rm.runCommand("Delete");
 			
 			if (lengthOfRoiTable!=0){
 
@@ -1205,8 +1207,17 @@ public class FlowCytometry {
 	}
 
 	public static void closeAllWindows() {
-		ij.quit();
+		ij.dispose();
+		imp.flush();
 		frame.dispose();
+		try {
+			display.destroy();
+		} catch (RemoteException e) {
+			//fall through
+		} catch (VisADException e) {
+			//fall through
+		}
+		ij.quit();
 	}
 
 }
