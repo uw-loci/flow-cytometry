@@ -50,9 +50,12 @@ import ij.process.AutoThresholder;
 import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Scrollbar;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
@@ -165,7 +168,7 @@ public class FlowCytometry {
 	private static RealType area, intensity, diameter, xType, yType;
 	private static FunctionType fn;
 	private static DataReferenceImpl data_ref;
-	private static Scrollbar scroll;
+	private static Component scroll;
 	private static DisplayImpl display;
 	private static ResultsTable rt;
 	private static double maxArea, minArea, maxIntensity, minIntensity;
@@ -273,11 +276,10 @@ public class FlowCytometry {
 		}
 		else if (nSlices == 2) {
 			ImageWindow stackwin = imp.getWindow();
-			scroll = (Scrollbar) stackwin.getComponent(1);
+			scroll = stackwin.getComponent(1);
 
-			AdjustmentListener l = new AdjustmentListener() {
+			ComponentListener l = new ComponentListener() {
 				@SuppressWarnings("synthetic-access")
-				@Override
 				public void adjustmentValueChanged(AdjustmentEvent arg0) {
 					try {
 						int slideNum =
@@ -310,8 +312,32 @@ public class FlowCytometry {
 						// ignore exceptions
 					}
 				}
+
+				@Override
+				public void componentHidden(ComponentEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void componentMoved(ComponentEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void componentResized(ComponentEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void componentShown(ComponentEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
 			};
-			scroll.addAdjustmentListener(l);
+			scroll.addComponentListener((ComponentListener) l);
 		}
 	}
 
@@ -647,19 +673,19 @@ public class FlowCytometry {
 //			ImagePlus currentImg = WindowManager.getCurrentImage();
 			IJ.run("bf ParticleAreasPlugin");
 //			IJ.runPlugIn("bf ParticleAreasPlugin", null);
-			RoiManager rm = RoiManager.getInstance();
-			ResultsTable rt = ResultsTable.getResultsTable();
+			RoiManager rman = RoiManager.getInstance();
+			ResultsTable rtab = ResultsTable.getResultsTable();
 
-			int lengthOfRoiTable = rm.getCount();
-			rm.runCommand("Deselect");
-			rm.runCommand("Delete");
-			
+			int lengthOfRoiTable = rman.getCount();
+
 			if (lengthOfRoiTable!=0){
+				rman.runCommand("Deselect");
+				rman.runCommand("Delete");
 
 				retVal = new int[lengthOfRoiTable];
-				float[] temp = rt.getColumn(rt.getColumnIndex("Area"));
+				float[] temp = rtab.getColumn(rtab.getColumnIndex("Area"));
 
-				if(temp!=null && retVal!=null){
+				if(temp!=null){
 					for (int i = 0; i < lengthOfRoiTable; i++){
 						retVal[i]=(int)temp[i];
 					}
@@ -1217,6 +1243,8 @@ public class FlowCytometry {
 		} catch (VisADException e) {
 			//fall through
 		}
+		ResultsTable.getResultsTable().reset();
+		WindowManager.closeAllWindows();
 		ij.quit();
 	}
 
