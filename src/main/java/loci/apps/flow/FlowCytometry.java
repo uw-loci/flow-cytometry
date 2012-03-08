@@ -665,14 +665,20 @@ public class FlowCytometry {
 	}
 
 	//ajeet
-	public static int[] getBFParticleAreas(){
+	public static int[] getParticleAreas(boolean isIntensityImage, boolean excludeOnEdge, double thresholdMin, int sizeMin){
 
 		int[] retVal = new int[1];
 
 		try{
-//			ImagePlus currentImg = WindowManager.getCurrentImage();
-			IJ.run("bf ParticleAreasPlugin");
-//			IJ.runPlugIn("bf ParticleAreasPlugin", null);
+			if(isIntensityImage){
+				if(excludeOnEdge) IJ.run("Find Particle Areas", "channel=Intensity threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" exclude_particles_on_edge");
+				else IJ.run("Find Particle Areas", "channel=Intensity threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+"");
+			}
+			else {
+				if(excludeOnEdge)IJ.run("Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" exclude_particles_on_edge");
+				else IJ.run("Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+"");
+			}
+
 			RoiManager rman = RoiManager.getInstance();
 			ResultsTable rtab = ResultsTable.getResultsTable();
 
