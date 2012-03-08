@@ -76,6 +76,18 @@
   </build>
 
   <developers>
+	<developer>
+      <id>ajeet</id>
+      <name>Ajeet Vivekanandan</name>
+      <url>http://loci.wisc.edu/people/ajeet-vivekanandan</url>
+      <organization>UW-Madison LOCI</organization>
+      <organizationUrl>http://loci.wisc.edu/</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>-6</timezone>
+    </developer>
+
     <developer>
       <id>ansari</id>
       <name>Hidayath Ansari</name>
@@ -87,6 +99,7 @@
       </roles>
       <timezone>-6</timezone>
     </developer>
+
     <developer>
       <id>curtis</id>
       <name>Curtis Rueden</name>
