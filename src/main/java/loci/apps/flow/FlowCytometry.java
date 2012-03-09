@@ -665,9 +665,9 @@ public class FlowCytometry {
 	}
 
 	//ajeet
-	public static int[] getParticleAreas(boolean isIntensityImage, boolean excludeOnEdge, double thresholdMin, int sizeMin){
+	public static float[] getParticleAreas(boolean isIntensityImage, boolean excludeOnEdge, double thresholdMin, int sizeMin){
 
-		int[] retVal = new int[1];
+		float[] retVal = new float[1];
 
 		try{
 			if(isIntensityImage){
@@ -685,18 +685,19 @@ public class FlowCytometry {
 			int lengthOfRoiTable = rman.getCount();
 
 			if (lengthOfRoiTable!=0){
-				rman.runCommand("Deselect");
-				rman.runCommand("Delete");
+				
+				retVal = new float[lengthOfRoiTable];
+				float[] areasArray = rtab.getColumn(rtab.getColumnIndex("Area"));
 
-				retVal = new int[lengthOfRoiTable];
-				float[] temp = rtab.getColumn(rtab.getColumnIndex("Area"));
-
-				if(temp!=null){
+				if(areasArray!=null){
 					for (int i = 0; i < lengthOfRoiTable; i++){
-						retVal[i]=(int)temp[i];
+						retVal[i]=areasArray[i];
 					}
 					return retVal;
 				}
+				
+				rman.runCommand("Deselect");
+				rman.runCommand("Delete");
 			}
 		}catch (Exception e){
 			//fall through
