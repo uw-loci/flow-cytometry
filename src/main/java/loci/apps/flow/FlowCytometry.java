@@ -1165,31 +1165,34 @@ public class FlowCytometry {
 		if (val) Detector.impParticles.show();
 		else Detector.impParticles.hide();
 	}
+	
+	public static void openFile(String filename, double PixelsPerMicron) throws IOException {
+		setPixelMicronSquared(PixelsPerMicron);
+		startImageJ();
+		IJ.open("\""+filename+"\"");
+	}
 
 	public static void processFile(String filename) throws IOException {
 		ImagePlus imagePlus = IJ.openImage(filename);
 		ImageStack imageStack = imagePlus.getStack(); // TODO: handle exception
 		int size = imagePlus.getWidth();
 
-		double PixelsPerMicron = Double.valueOf(IJ.getString(
-				"Please enter the pixels/micron value for this analysis", "0.1"));
-		pixelMicronSquared = PixelsPerMicron*PixelsPerMicron;
-
+//		double PixelsPerMicron=Math.sqrt(pixelMicronSquared);
 		// Close the other open windows
 		if (frame != null) frame.dispose();
 		imagePlus.close();
 
-		init(size, size, PixelsPerMicron);
-		showParticles(true);
+//		init(size, size, PixelsPerMicron);
+		showParticles(false);
 		for (int i=1; i<=imageStack.getSize(); i++) {
 			byte[] imageData = (byte[]) imageStack.getPixels(i);
-			incrementSlices();
+//			incrementSlices();
 			showImage(size, size, imageData);
-			newestProcessFrame(i);
-			updateGraph();
+//			newestProcessFrame(i);
+//			updateGraph();
 		}
 
-		saveValues(filename+".values");
+//		saveValues(filename+".values");
 	}
 
 	public static void printVector(Vector<Double> v) {
