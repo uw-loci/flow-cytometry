@@ -1169,7 +1169,7 @@ public class FlowCytometry {
 	public static void openFile(String filename, double PixelsPerMicron) throws IOException {
 		setPixelMicronSquared(PixelsPerMicron);
 		startImageJ();
-		IJ.open("\""+filename+"\"");
+		IJ.open(filename);
 	}
 
 	public static void processFile(String filename) throws IOException {
