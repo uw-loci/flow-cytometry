@@ -40,6 +40,7 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
+import ij.macro.Interpreter;
 import ij.measure.Measurements;
 import ij.measure.ResultsTable;
 import ij.plugin.filter.Analyzer;
@@ -51,6 +52,7 @@ import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Frame;
 import java.awt.Scrollbar;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
@@ -203,69 +205,27 @@ public class FlowCytometry {
 	}
 
 
-	/*
-	public static void showImageForBrightfield(int width, int height, byte[] imageData) {
-		//bp = new ByteProcessor(width,height,imageData,
-		//  ImageTools.makeColorModel(1, DataBuffer.TYPE_BYTE));
-		bp2 = new ByteProcessor(width,height,imageData, theCM);
-		bp2.createImage();
-		stack2.addSlice("Slice2 "+nSlices2, bp2);
-		imp2.setStack("Islet images 2", stack2);
-		imp2.setSlice(stack2.getSize());
-		imp2.show();
 
-		if (nSlices2 == 1) {
-			stack2.deleteSlice(1);
-		}
-		else if (nSlices2 == 2) {
-			ImageWindow stackwin = imp2.getWindow();
-			scroll2 = (Scrollbar) stackwin.getComponent(1);
-
-			AdjustmentListener l = new AdjustmentListener() {
-				@SuppressWarnings("synthetic-access")
-				@Override
-				public void adjustmentValueChanged(AdjustmentEvent arg0) {
-					try {
-						int slideNum =
-								((Scrollbar) imp2.getWindow().getComponent(1)).getValue();
-						//for the detected particles window
-						if (showParticles2) {
-							d2 = new Detector(resolutionWidth,
-									intensityThreshold, areaThresholdInPixels);
-							d2.findParticles(stack2.getProcessor(slideNum));
-							d2.crunchArray();
-							Detector.displayImage(d2.getFloodArray());
-						}
-
-						//for the graph
-						//IJ.log("This is slide "+slideNum+
-						//  " and particle numbers on this slide go from "+
-						//  sliceBegin[slideNum]+" to "+sliceEnd[slideNum]);
-						//IJ.log(Integer.toString(((Scrollbar)
-						//  Intensity_.this.imp.getWindow().getComponent(1)).getValue()));
-						FlowCytometry.data_ref.setData(
-								newestGetData(slideNum, cumulative, intensity, fn));
-						FlowCytometry.display.reDisplayAll();
-						//Intensity_.this.data_ref.setData(
-						//  getData(imp.getCurrentSlice(), cumulative, intensity, fn));
-					}
-					catch (RemoteException e) {
-						// ignore exceptions
-					}
-					catch (VisADException e) {
-						// ignore exceptions
-					}
-				}
-			};
-			scroll2.addAdjustmentListener(l);
-		}
-	}
-	 */
-	public static void showImage(int width, int height, byte[] imageData) {
-		//bp = new ByteProcessor(width,height,imageData,
-		//  ImageTools.makeColorModel(1, DataBuffer.TYPE_BYTE));
+	public static void showImage(String mode, int width, int height, byte[] imageData) {
+		
 		bp = new ByteProcessor(width,height,imageData, theCM);
-		bp.createImage();
+//		String mode = "brightfield";
+		switch (mode){
+			case "brightfield":
+				IJ.run("selectWindow(\"Brightfield Images\")");			
+				break;
+			case "intensity": 
+				IJ.run("selectWindow(\"Intensity Images\")");
+				break;
+			default: 
+				IJ.run("selectWindow(\"Islet Images\")");
+				break;		
+		}
+		IJ.run("Add Slice");
+		imp.setImage(bp.createImage());
+		imp.show();
+		
+/*		bp.createImage();
 		stack.addSlice("Slice "+nSlices, bp);
 		imp.setStack("Islet images", stack);
 		imp.setSlice(stack.getSize());
@@ -277,7 +237,7 @@ public class FlowCytometry {
 		else if (nSlices == 2) {
 			ImageWindow stackwin = imp.getWindow();
 			scroll = stackwin.getComponent(1);
-
+		
 			ComponentListener l = new ComponentListener() {
 				@SuppressWarnings("synthetic-access")
 				public void adjustmentValueChanged(AdjustmentEvent arg0) {
@@ -311,36 +271,36 @@ public class FlowCytometry {
 					catch (VisADException e) {
 						// ignore exceptions
 					}
-				}
+*/				}
 
-				@Override
+/*				@Override
 				public void componentHidden(ComponentEvent e) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				@Override
 				public void componentMoved(ComponentEvent e) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				@Override
 				public void componentResized(ComponentEvent e) {
 					// TODO Auto-generated method stub
-					
+
 				}
 
 				@Override
 				public void componentShown(ComponentEvent e) {
 					// TODO Auto-generated method stub
-					
+
 				}
 			};
 			scroll.addComponentListener((ComponentListener) l);
 		}
 	}
-
+*/
 	public static void initVars() {
 		maxArea=Double.MIN_VALUE;
 		minArea=Double.MAX_VALUE;
@@ -366,8 +326,42 @@ public class FlowCytometry {
 		diameter = RealType.getRealType("Diameter");
 	}
 
-	public static void init(int width, int height, double pixelsPerMicron) {
+	public static void init(String mode, int width, int height, double pixelsPerMicron) {
+
 		setResolution(width, height);
+		s_Date = new java.text.SimpleDateFormat("MM.dd.yyyy hh:mm:ss").format(
+				new java.util.Date());
+		byte[] r = new byte[256];
+		byte[] g = new byte[256];
+		byte[] b = new byte[256];
+
+		for(int ii=0 ; ii<256 ; ii++)
+			r[ii] = g[ii] = b[ii] = (byte)ii;
+
+		theCM = new IndexColorModel(8, 256, r,g,b);
+//		String mode = "brightfield";
+		mode=mode.toLowerCase();
+		switch (mode){
+			case "brightfield": IJ.newImage("Brightfield Images", "8-bit", width, height, 0);
+				break;
+			case "intensity": IJ.newImage("Intensity Images", "8-Bit", width, height, 0);
+				break;
+			case "both": 
+				IJ.newImage("Brightfield Images", "8-bit", width, height, 0);
+				IJ.newImage("Intensity Images", "8-Bit", width, height, 0);
+				break;
+			default: IJ.newImage("Islet Images", "8-Bit", width, height, 0);
+				break;		
+		}
+		if (pixelsPerMicron > 0){ 
+			pixelMicronSquared = pixelsPerMicron*pixelsPerMicron;
+			IJ.run("Set Scale...", "distance="+width+" known="+((double)width/pixelsPerMicron) +" pixel=1 unit=microns");		
+		}
+		else pixelMicronSquared = 0.149*0.149;
+		
+
+
+		/*		setResolution(width, height);
 		s_Date = new java.text.SimpleDateFormat("MM.dd.yyyy hh:mm:ss").format(
 				new java.util.Date());
 
@@ -456,6 +450,7 @@ public class FlowCytometry {
 		catch (RemoteException re) {
 			IJ.log("Remote Exception: "+re.getMessage());
 		}
+		 */
 	}
 
 	public static void setAxes(int x, int y) {
@@ -670,6 +665,7 @@ public class FlowCytometry {
 		float[] retVal = new float[1];
 
 		try{
+
 			if(isIntensityImage){
 				if(excludeOnEdge) IJ.run("Find Particle Areas", "channel=Intensity threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" exclude_particles_on_edge");
 				else IJ.run("Find Particle Areas", "channel=Intensity threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+"");
@@ -678,14 +674,14 @@ public class FlowCytometry {
 				if(excludeOnEdge)IJ.run("Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" exclude_particles_on_edge");
 				else IJ.run("Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+"");
 			}
-
-			RoiManager rman = RoiManager.getInstance();
+			Interpreter.batchMode=true;
+			RoiManager rman = RoiManager.getInstance2();
 			ResultsTable rtab = ResultsTable.getResultsTable();
 
 			int lengthOfRoiTable = rman.getCount();
 
 			if (lengthOfRoiTable!=0){
-				
+
 				retVal = new float[lengthOfRoiTable];
 				float[] areasArray = rtab.getColumn(rtab.getColumnIndex("Area"));
 
@@ -693,15 +689,22 @@ public class FlowCytometry {
 					for (int i = 0; i < lengthOfRoiTable; i++){
 						retVal[i]=areasArray[i];
 					}
+					rman.dispose();
+					//					rman.close();
+					rtab.reset();
+					System.gc();
+					Interpreter.batchMode=false;
 					return retVal;
 				}
-				
+
 				rman.runCommand("Deselect");
 				rman.runCommand("Delete");
 			}
 		}catch (Exception e){
 			//fall through
 		}
+		System.gc();
+		Interpreter.batchMode=false;
 		retVal[0]=0;
 		return retVal;
 	}
@@ -1165,11 +1168,11 @@ public class FlowCytometry {
 		if (val) Detector.impParticles.show();
 		else Detector.impParticles.hide();
 	}
-	
+
 	public static void openFile(String filename, double PixelsPerMicron) throws IOException {
 		setPixelMicronSquared(PixelsPerMicron);
 		startImageJ();
-		IJ.open(filename);
+		IJ.run("Bio-Formats Importer", "open=["+filename+"] autoscale color_mode=Default view=Hyperstack stack_order=XYCZT");
 	}
 
 	public static void processFile(String filename) throws IOException {
@@ -1177,22 +1180,22 @@ public class FlowCytometry {
 		ImageStack imageStack = imagePlus.getStack(); // TODO: handle exception
 		int size = imagePlus.getWidth();
 
-//		double PixelsPerMicron=Math.sqrt(pixelMicronSquared);
+		//		double PixelsPerMicron=Math.sqrt(pixelMicronSquared);
 		// Close the other open windows
 		if (frame != null) frame.dispose();
 		imagePlus.close();
 
-//		init(size, size, PixelsPerMicron);
+		//		init(size, size, PixelsPerMicron);
 		showParticles(false);
 		for (int i=1; i<=imageStack.getSize(); i++) {
 			byte[] imageData = (byte[]) imageStack.getPixels(i);
-//			incrementSlices();
-			showImage(size, size, imageData);
-//			newestProcessFrame(i);
-//			updateGraph();
+			//			incrementSlices();
+			showImage("", size, size, imageData);
+			//			newestProcessFrame(i);
+			//			updateGraph();
 		}
 
-//		saveValues(filename+".values");
+		//		saveValues(filename+".values");
 	}
 
 	public static void printVector(Vector<Double> v) {
