@@ -210,16 +210,14 @@ public class FlowCytometry {
 		
 		bp = new ByteProcessor(width,height,imageData, theCM);
 //		String mode = "brightfield";
-		switch (mode){
-			case "brightfield":
-				IJ.run("selectWindow(\"Brightfield Images\")");			
-				break;
-			case "intensity": 
-				IJ.run("selectWindow(\"Intensity Images\")");
-				break;
-			default: 
-				IJ.run("selectWindow(\"Islet Images\")");
-				break;		
+		if ("brightfield".equals(mode)) {
+			IJ.run("selectWindow(\"Brightfield Images\")");
+		}
+		else if ("intensity".equals(mode)) {
+			IJ.run("selectWindow(\"Intensity Images\")");
+		}
+		else {
+			IJ.run("selectWindow(\"Islet Images\")");
 		}
 		IJ.run("Add Slice");
 		imp.setImage(bp.createImage());
@@ -341,17 +339,18 @@ public class FlowCytometry {
 		theCM = new IndexColorModel(8, 256, r,g,b);
 //		String mode = "brightfield";
 		mode=mode.toLowerCase();
-		switch (mode){
-			case "brightfield": IJ.newImage("Brightfield Images", "8-bit", width, height, 0);
-				break;
-			case "intensity": IJ.newImage("Intensity Images", "8-Bit", width, height, 0);
-				break;
-			case "both": 
-				IJ.newImage("Brightfield Images", "8-bit", width, height, 0);
-				IJ.newImage("Intensity Images", "8-Bit", width, height, 0);
-				break;
-			default: IJ.newImage("Islet Images", "8-Bit", width, height, 0);
-				break;		
+		if ("brightfield".equals(mode)) {
+			IJ.newImage("Brightfield Images", "8-bit", width, height, 0);
+		}
+		else if ("intensity".equals(mode)) {
+			IJ.newImage("Intensity Images", "8-Bit", width, height, 0);
+		}
+		else if ("both".equals(mode)) {
+			IJ.newImage("Brightfield Images", "8-bit", width, height, 0);
+			IJ.newImage("Intensity Images", "8-Bit", width, height, 0);
+		}
+		else {
+			IJ.newImage("Islet Images", "8-Bit", width, height, 0);
 		}
 		if (pixelsPerMicron > 0){ 
 			pixelMicronSquared = pixelsPerMicron*pixelsPerMicron;
