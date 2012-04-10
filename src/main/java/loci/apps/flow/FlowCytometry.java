@@ -207,23 +207,25 @@ public class FlowCytometry {
 
 
 	public static void showImage(String mode, int width, int height, byte[] imageData) {
-		
-		bp = new ByteProcessor(width,height,imageData, theCM);
-//		String mode = "brightfield";
-		if ("brightfield".equals(mode)) {
-			IJ.run("selectWindow(\"Brightfield Images\")");
+		try{
+			bp = new ByteProcessor(width,height,imageData, theCM);
+			//		String mode = "brightfield";
+			if ("brightfield".equalsIgnoreCase(mode)) {
+				IJ.run("selectWindow(\"Brightfield Images\")");
+			}
+			else if ("intensity".equalsIgnoreCase(mode)) {
+				IJ.run("selectWindow(\"Intensity Images\")");
+			}
+			else {
+				IJ.run("selectWindow(\"Islet Images\")");
+			}
+			IJ.run("Add Slice");
+			imp.setImage(bp.createImage());
+			imp.show();
+		} catch(Exception e){
+			System.out.println("Error at showImage method " + e.getLocalizedMessage());
 		}
-		else if ("intensity".equals(mode)) {
-			IJ.run("selectWindow(\"Intensity Images\")");
-		}
-		else {
-			IJ.run("selectWindow(\"Islet Images\")");
-		}
-		IJ.run("Add Slice");
-		imp.setImage(bp.createImage());
-		imp.show();
-		
-/*		bp.createImage();
+		/*		bp.createImage();
 		stack.addSlice("Slice "+nSlices, bp);
 		imp.setStack("Islet images", stack);
 		imp.setSlice(stack.getSize());
@@ -235,7 +237,7 @@ public class FlowCytometry {
 		else if (nSlices == 2) {
 			ImageWindow stackwin = imp.getWindow();
 			scroll = stackwin.getComponent(1);
-		
+
 			ComponentListener l = new ComponentListener() {
 				@SuppressWarnings("synthetic-access")
 				public void adjustmentValueChanged(AdjustmentEvent arg0) {
@@ -269,9 +271,9 @@ public class FlowCytometry {
 					catch (VisADException e) {
 						// ignore exceptions
 					}
-*/				}
+		 */				}
 
-/*				@Override
+	/*				@Override
 				public void componentHidden(ComponentEvent e) {
 					// TODO Auto-generated method stub
 
@@ -298,7 +300,7 @@ public class FlowCytometry {
 			scroll.addComponentListener((ComponentListener) l);
 		}
 	}
-*/
+	 */
 	public static void initVars() {
 		maxArea=Double.MIN_VALUE;
 		minArea=Double.MAX_VALUE;
@@ -325,7 +327,7 @@ public class FlowCytometry {
 	}
 
 	public static void init(String mode, int width, int height, double pixelsPerMicron) {
-
+		try{
 		setResolution(width, height);
 		s_Date = new java.text.SimpleDateFormat("MM.dd.yyyy hh:mm:ss").format(
 				new java.util.Date());
@@ -337,27 +339,28 @@ public class FlowCytometry {
 			r[ii] = g[ii] = b[ii] = (byte)ii;
 
 		theCM = new IndexColorModel(8, 256, r,g,b);
-//		String mode = "brightfield";
 		mode=mode.toLowerCase();
 		if ("brightfield".equals(mode)) {
-			IJ.newImage("Brightfield Images", "8-bit", width, height, 0);
+			IJ.runMacro("newImage(\"Brightfield Images\", \"8-bit\", "+width+", "+height+", 0)");			
 		}
 		else if ("intensity".equals(mode)) {
-			IJ.newImage("Intensity Images", "8-Bit", width, height, 0);
+			IJ.runMacro("newImage(\"Intensity Images\", \"8-bit\", "+width+", "+height+", 0)");
 		}
 		else if ("both".equals(mode)) {
-			IJ.newImage("Brightfield Images", "8-bit", width, height, 0);
-			IJ.newImage("Intensity Images", "8-Bit", width, height, 0);
+			IJ.runMacro("newImage(\"Brightfield Images\", \"8-bit\", "+width+", "+height+", 0)");
+			IJ.runMacro("newImage(\"Intensity Images\", \"8-bit\", "+width+", "+height+", 0)");
 		}
 		else {
-			IJ.newImage("Islet Images", "8-Bit", width, height, 0);
+			IJ.runMacro("newImage(\"Islet Images\", \"8-bit\", "+width+", "+height+", 0)");
 		}
 		if (pixelsPerMicron > 0){ 
 			pixelMicronSquared = pixelsPerMicron*pixelsPerMicron;
 			IJ.run("Set Scale...", "distance="+width+" known="+((double)width/pixelsPerMicron) +" pixel=1 unit=microns");		
 		}
 		else pixelMicronSquared = 0.149*0.149;
-		
+		} catch(Exception e){
+			System.out.println("Exception at init mehtod " + e.getLocalizedMessage());
+		}
 
 
 		/*		setResolution(width, height);
