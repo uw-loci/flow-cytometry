@@ -6,6 +6,7 @@ import ij.plugin.filter.PlugInFilter;
 import ij.plugin.frame.*;
 import ij.process.ImageProcessor;
 import ij.gui.GenericDialog;
+import ij.macro.Interpreter;
 import ij.measure.ResultsTable;
 
 public class Find_Particle_Areas implements PlugInFilter {
@@ -42,7 +43,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 			boolean exclude=gd.getNextBoolean (); 
 			boolean doTheSum= gd.getNextBoolean();
 
-	//		Interpreter.batchMode=true;
+			Interpreter.batchMode=true;
 
 			ImageProcessor duplicatedArg0 = arg0.duplicate();
 			ImagePlus imp = new ImagePlus("duplicate", duplicatedArg0); // has only one slice
@@ -70,12 +71,13 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 			}
 				
-			RoiManager roiMan = RoiManager.getInstance2();
-			if(roiMan.getCount()>0)
-				roiMan.runCommand("Measure");
+
 //				IJ.runMacro("roiManager(\"Measure\")",null);
 
 			if (doTheSum){
+				RoiManager roiMan = RoiManager.getInstance2();
+				if(roiMan.getCount()>0)
+					roiMan.runCommand("Measure");
 				try{
 					int lengthOfRoiTable=roiMan.getCount();
 					float retVal=0;

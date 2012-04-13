@@ -204,30 +204,13 @@ public class FlowCytometry {
 		nSlices++;
 	}
 
-
-
 	public static void showImage(String mode, int width, int height, byte[] imageData) {
-		try{
-			bp = new ByteProcessor(width,height,imageData, theCM);
-			//		String mode = "brightfield";
-			if ("brightfield".equalsIgnoreCase(mode)) {
-				IJ.run("selectWindow(\"Brightfield Images\")");
-			}
-			else if ("intensity".equalsIgnoreCase(mode)) {
-				IJ.run("selectWindow(\"Intensity Images\")");
-			}
-			else {
-				IJ.run("selectWindow(\"Islet Images\")");
-			}
-			IJ.run("Add Slice");
-			imp.setImage(bp.createImage());
-			imp.show();
-		} catch(Exception e){
-			System.out.println("Error at showImage method " + e.getLocalizedMessage());
-		}
-		/*		bp.createImage();
+		//bp = new ByteProcessor(width,height,imageData,
+		//  ImageTools.makeColorModel(1, DataBuffer.TYPE_BYTE));
+		bp = new ByteProcessor(width,height,imageData, theCM);
+		bp.createImage();
 		stack.addSlice("Slice "+nSlices, bp);
-		imp.setStack("Islet images", stack);
+		imp.setStack(mode, stack);
 		imp.setSlice(stack.getSize());
 		imp.show();
 
@@ -237,70 +220,10 @@ public class FlowCytometry {
 		else if (nSlices == 2) {
 			ImageWindow stackwin = imp.getWindow();
 			scroll = stackwin.getComponent(1);
-
-			ComponentListener l = new ComponentListener() {
-				@SuppressWarnings("synthetic-access")
-				public void adjustmentValueChanged(AdjustmentEvent arg0) {
-					try {
-						int slideNum =
-								((Scrollbar) imp.getWindow().getComponent(1)).getValue();
-						//for the detected particles window
-						if (showParticles) {
-							d = new Detector(resolutionWidth,
-									intensityThreshold, areaThresholdInPixels);
-							d.findParticles(stack.getProcessor(slideNum));
-							d.crunchArray();
-							Detector.displayImage(d.getFloodArray());
-						}
-
-						//for the graph
-						//IJ.log("This is slide "+slideNum+
-						//  " and particle numbers on this slide go from "+
-						//  sliceBegin[slideNum]+" to "+sliceEnd[slideNum]);
-						//IJ.log(Integer.toString(((Scrollbar)
-						//  Intensity_.this.imp.getWindow().getComponent(1)).getValue()));
-						FlowCytometry.data_ref.setData(
-								newestGetData(slideNum, cumulative, intensity, fn));
-						FlowCytometry.display.reDisplayAll();
-						//Intensity_.this.data_ref.setData(
-						//  getData(imp.getCurrentSlice(), cumulative, intensity, fn));
-					}
-					catch (RemoteException e) {
-						// ignore exceptions
-					}
-					catch (VisADException e) {
-						// ignore exceptions
-					}
-		 */				}
-
-	/*				@Override
-				public void componentHidden(ComponentEvent e) {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void componentMoved(ComponentEvent e) {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void componentResized(ComponentEvent e) {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void componentShown(ComponentEvent e) {
-					// TODO Auto-generated method stub
-
-				}
-			};
-			scroll.addComponentListener((ComponentListener) l);
 		}
+		nSlices++;
 	}
-	 */
+
 	public static void initVars() {
 		maxArea=Double.MIN_VALUE;
 		minArea=Double.MAX_VALUE;
@@ -327,45 +250,9 @@ public class FlowCytometry {
 	}
 
 	public static void init(String mode, int width, int height, double pixelsPerMicron) {
-		try{
 		setResolution(width, height);
 		s_Date = new java.text.SimpleDateFormat("MM.dd.yyyy hh:mm:ss").format(
 				new java.util.Date());
-		byte[] r = new byte[256];
-		byte[] g = new byte[256];
-		byte[] b = new byte[256];
-
-		for(int ii=0 ; ii<256 ; ii++)
-			r[ii] = g[ii] = b[ii] = (byte)ii;
-
-		theCM = new IndexColorModel(8, 256, r,g,b);
-		mode=mode.toLowerCase();
-		if ("brightfield".equals(mode)) {
-			IJ.runMacro("newImage(\"Brightfield Images\", \"8-bit\", "+width+", "+height+", 0)");			
-		}
-		else if ("intensity".equals(mode)) {
-			IJ.runMacro("newImage(\"Intensity Images\", \"8-bit\", "+width+", "+height+", 0)");
-		}
-		else if ("both".equals(mode)) {
-			IJ.runMacro("newImage(\"Brightfield Images\", \"8-bit\", "+width+", "+height+", 0)");
-			IJ.runMacro("newImage(\"Intensity Images\", \"8-bit\", "+width+", "+height+", 0)");
-		}
-		else {
-			IJ.runMacro("newImage(\"Islet Images\", \"8-bit\", "+width+", "+height+", 0)");
-		}
-		if (pixelsPerMicron > 0){ 
-			pixelMicronSquared = pixelsPerMicron*pixelsPerMicron;
-			IJ.run("Set Scale...", "distance="+width+" known="+((double)width/pixelsPerMicron) +" pixel=1 unit=microns");		
-		}
-		else pixelMicronSquared = 0.149*0.149;
-		} catch(Exception e){
-			System.out.println("Exception at init mehtod " + e.getLocalizedMessage());
-		}
-
-
-		/*		setResolution(width, height);
-		s_Date = new java.text.SimpleDateFormat("MM.dd.yyyy hh:mm:ss").format(
-				new java.util.Date());
 
 		byte[] r = new byte[256];
 		byte[] g = new byte[256];
@@ -375,12 +262,10 @@ public class FlowCytometry {
 			r[ii] = g[ii] = b[ii] = (byte)ii;
 
 		theCM = new IndexColorModel(8, 256, r,g,b);
-		imp = new ImagePlus("Islet images",
+		imp = new ImagePlus(mode+" images",
 				new ByteProcessor(resolutionWidth,resolutionHeight));
 		stack = new ImageStack(resolutionWidth, resolutionHeight, theCM);
 		imp.show();
-
-		Detector.createImageHolder(resolutionWidth, resolutionHeight);
 
 		imp.unlock();
 
@@ -395,66 +280,9 @@ public class FlowCytometry {
 		bp = new ByteProcessor(resolutionWidth,resolutionHeight,dummyData, theCM);
 		bp.createImage();
 		stack.addSlice("Slice "+nSlices, bp);
-		imp.setStack("Islet images", stack);
-
+		imp.setStack(mode+" images", stack);
 		imp.setSlice(1);
-
-		try {
-			// Display initialization
-
-			display = new DisplayImplJ2D("Graph Display");
-			data_ref = new DataReferenceImpl("data_ref");
-			data_ref.setData(null);
-			display.addReference(data_ref);
-			display.getGraphicsModeControl().setScaleEnable(true);
-			display.getGraphicsModeControl().setPointSize(3);
-			setAxes(0,1);
-
-			frame = new JFrame("Graph Window");
-			frame.setLayout(new BorderLayout());
-
-			CBcumulative = new JCheckBox("Cumulative");
-			CBcumulative.setMnemonic(KeyEvent.VK_G);
-			JPanel bottomPanel = new JPanel();
-			bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.LINE_AXIS));
-			bottomPanel.add(CBcumulative);
-
-			frame.getContentPane().add(display.getComponent(), BorderLayout.CENTER);
-			frame.getContentPane().add(bottomPanel, BorderLayout.SOUTH);
-
-			ItemListener CBitemListener = new ItemListener() {
-				@SuppressWarnings("synthetic-access")
-				@Override
-				public void itemStateChanged(ItemEvent itemEvent) {
-					cumulative = itemEvent.getStateChange() == ItemEvent.SELECTED;
-					try {
-						FlowCytometry.data_ref.setData(newestGetData(
-								imp.getCurrentSlice(), cumulative, intensity, fn));
-						FlowCytometry.display.reDisplayAll();
-					}
-					catch (RemoteException e) {
-						// ignore exceptions
-					}
-					catch (VisADException e) {
-						// ignore exceptions
-					}
-				}
-			};
-			CBcumulative.addItemListener(CBitemListener);
-
-			imp.setSlice(1);
-			frame.setSize(600, 600);
-			frame.setVisible(true);
-		}
-		catch (VisADException e) {
-			IJ.log("VisAD Exception in init: "+e.getMessage());
-		}
-		catch (RemoteException re) {
-			IJ.log("Remote Exception: "+re.getMessage());
-		}
-		 */
 	}
-
 	public static void setAxes(int x, int y) {
 		// 0 - Intensity
 		// 1 - Area
