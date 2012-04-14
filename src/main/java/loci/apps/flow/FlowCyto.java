@@ -24,7 +24,7 @@ public class FlowCyto {
 	private static int nSlices, nSlicesBF, nSlicesIN;
 	private static ByteProcessor bp;
 	private static ColorModel theCM;	
-	private static String s_Name, s_Experiment, s_Params, s_Date, tempImageName;
+	//	private static String s_Name, s_Experiment, s_Params, s_Date, tempImageName;
 	private static double pixelMicronSquared;
 	private static RoiManager rman;
 	private static ResultsTable rtab;
@@ -66,7 +66,7 @@ public class FlowCyto {
 	@SuppressWarnings("static-access")
 	public static void init(String mode, int width, int height, double pixelsPerMicron) {
 		try{
-	//		timer = new Timestamp(0);
+			//		timer = new Timestamp(0);
 			long initialTime = System.nanoTime();
 			nSlices=0;
 			nSlicesBF=0;
@@ -74,7 +74,7 @@ public class FlowCyto {
 			impBF=new ImagePlus();
 			impIN=new ImagePlus();
 			imp=new ImagePlus();
-	//		s_Date = new java.text.SimpleDateFormat("MM.dd.yyyy hh:mm:ss").format(new java.util.Date());
+			//		s_Date = new java.text.SimpleDateFormat("MM.dd.yyyy hh:mm:ss").format(new java.util.Date());
 			byte[] r = new byte[256];
 			for(int ii=0 ; ii<256 ; ii++)
 				r[ii]=(byte)ii;
@@ -208,7 +208,7 @@ public class FlowCyto {
 	public static float[] getParticleAreas(boolean isIntensityImage, boolean excludeOnEdge, double thresholdMin, int sizeMin){
 		long initialTime = System.nanoTime();
 		Interpreter.batchMode=true;
-		
+
 		try{
 
 			if(isIntensityImage){				
@@ -218,13 +218,11 @@ public class FlowCyto {
 					//-----------------------FOR DEBUG PURPOSES--------------------//
 					IJ.log("plugin finished on intensity image "+nSlicesIN+" in "+ ((System.nanoTime() - initialTime)/1000) +"us");
 					//-------------------------------------------------------------//
-				
+
 				}catch(Exception e){
 					if(excludeOnEdge)IJ.run(imp, "Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" exclude_particles_on_edge");
 					else IJ.run(imp, "Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+"");
 				}
-				//				if(excludeOnEdge) IJ.run("Find Particle Areas", "channel=Intensity threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" exclude_particles_on_edge");
-				//				else IJ.run("Find Particle Areas", "channel=Intensity threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+"");
 			}
 			else {
 				try{
@@ -233,13 +231,11 @@ public class FlowCyto {
 					//-----------------------FOR DEBUG PURPOSES--------------------//
 					IJ.log("plugin finished on brightfield image "+nSlicesBF+" in "+ ((System.nanoTime() - initialTime)/1000) +"us");
 					//-------------------------------------------------------------//
-				
+
 				}catch(Exception e){
 					if(excludeOnEdge)IJ.run(imp, "Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" exclude_particles_on_edge");
 					else IJ.run(imp, "Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+"");
 				}
-				//				if(excludeOnEdge)IJ.run("Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" exclude_particles_on_edge");
-				//				else IJ.run("Find Particle Areas", "channel=Brightfield threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+"");
 			}
 
 			rman = RoiManager.getInstance2();
@@ -247,26 +243,18 @@ public class FlowCyto {
 				rman.runCommand("Measure");
 				rtab = ResultsTable.getResultsTable();
 
-				//			int lengthOfRoiTable = rman.getCount();
-
-				//			if (lengthOfRoiTable!=0){
-
-				//			retVal = new float[lengthOfRoiTable];
 				float[] areasArray = rtab.getColumn(rtab.getColumnIndex("Area"));
 
 				if(areasArray!=null){
-					//				for (int i = 0; i < lengthOfRoiTable; i++){
-					//					retVal[i]=areasArray[i];
-					//				}
-					//			rman.dispose();
-					rtab.reset();
-					rman.runCommand("Deselect");
-					rman.runCommand("Delete");
+
+		//			rtab.reset();
+		//			rman.runCommand("Deselect");
+		//			rman.runCommand("Delete");
 
 					//-----------------------FOR DEBUG PURPOSES--------------------//
 					IJ.log("particle areas calculated in "+ ((System.nanoTime() - initialTime)/1000) +"us");
 					//-------------------------------------------------------------//
-					//				return retVal;
+
 					return areasArray;
 				}
 
@@ -285,6 +273,10 @@ public class FlowCyto {
 
 	public static void garbageCollect(){
 		System.gc();
+	}
+
+	public static void logInImageJ(String message){
+		IJ.log(message);
 	}
 
 }
