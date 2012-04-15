@@ -6,7 +6,6 @@ import java.util.Collections;
 import ij.*;
 import ij.plugin.Duplicator;
 import ij.plugin.filter.PlugInFilter;
-import ij.plugin.frame.RoiManager;
 import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 import ij.gui.GenericDialog;
@@ -22,6 +21,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 	private int stackSize, curSlice, sizeMin;
 	private Duplicator duplicator;
 	private TextWindow twindow;
+	
 
 	/**
 	 * Original setup method called by ImageJ when plugin is run.
@@ -59,9 +59,9 @@ public class Find_Particle_Areas implements PlugInFilter {
 			gd.addNumericField ("Threshold_Minimum",  170, 0);
 			gd.addNumericField ("Size_Minimum",  0, 0);
 			gd.addCheckbox("Exclude_Particles_on_Edge",true);
-			gd.addCheckbox("Show summed areas",false);
-			gd.addCheckbox("Run Plugin Over Entire Stack", false);
-
+			gd.addCheckbox("Show_summed_areas",false);
+			gd.addCheckbox("Run_Plugin_Over_Entire_Stack", false);
+			
 			gd.showDialog();
 			if (gd.wasCanceled()) return;
 
@@ -72,11 +72,11 @@ public class Find_Particle_Areas implements PlugInFilter {
 			exclude=gd.getNextBoolean (); 
 			doTheSum= gd.getNextBoolean();
 			dofullStack = gd.getNextBoolean();
-
+			
 			//begin core program
 			Interpreter.batchMode=true;
 
-			//check option for analyze full stack first, bypass other methods if so.
+			//check option for analyze full stack, bypass other methods if so.
 			//uses original stacked image, not single image
 			if (dofullStack){
 				stackSize = origImage.getStackSize();
@@ -90,14 +90,14 @@ public class Find_Particle_Areas implements PlugInFilter {
 				if (doTheSum)
 					doTheSum(true);
 
-				imp.flush();
 				imp.close();
 			}
-
-
+			Interpreter.batchMode=false;
+			
 		} catch(Exception e){
 			IJ.showMessage("Error with plugin.");
 			e.printStackTrace();
+			Interpreter.batchMode=false;
 		}
 	}
 
@@ -223,6 +223,49 @@ public class Find_Particle_Areas implements PlugInFilter {
 			IJ.showMessage("Error with processing stack.");
 			IJ.log(e.getMessage());
 		}
+	}
+	
+	
+	public static float[] inWiscScanMode(ImagePlus imageToAnalyze, boolean isIntensity, boolean excludeOnEdge, double threshMin, int minSize){
+		float[] summedPixelAreasArray;		
+		try{
+			//if image is of intensity, do related calculations, else do brightfield calculations
+			if(isIntensity){
+				imageToAnalyze.getProcessor().setThreshold(threshMin, 255, ImageProcessor.RED_LUT);
+				IJ.run(imageToAnalyze, "Convert to Mask", null);
+
+				if(excludeOnEdge) IJ.run(imageToAnalyze, "Analyze Particles...", "size="+minSize+"-Infinity circularity=0.00-1.00 show=Masks display exclude clear include add");
+				else IJ.run(imageToAnalyze, "Analyze Particles...", "size="+minSize+"-Infinity circularity=0.00-1.00 show=Masks display clear include add");
+			}			
+			else{
+				IJ.run(imageToAnalyze, "Find Edges", null);
+				IJ.run(imageToAnalyze, "Find Edges", null);
+
+				IJ.run(imageToAnalyze, "Gaussian Blur...", "sigma=5");
+
+				IJ.runPlugIn(imageToAnalyze, "Auto Threshold", "method=Minimum white");
+
+				if(excludeOnEdge) IJ.run(imageToAnalyze, "Analyze Particles...", "size="+minSize+"-Infinity circularity=0.00-1.00 show=Masks display exclude clear include add");
+				else IJ.run(imageToAnalyze, "Analyze Particles...", "size="+minSize+"-Infinity circularity=0.00-1.00 show=Masks display clear include add");
+			} 
+			
+			//get the pixel areas for all particles in this image as array
+			ResultsTable resTab = ResultsTable.getResultsTable();
+			if(resTab.getCounter()>0){
+				//get the values under the column "Area"
+				return summedPixelAreasArray = resTab.getColumn(resTab.getColumnIndex("Area"));
+			}
+		}catch(Exception e){
+			IJ.showMessage("Error with finding particles plugin");
+			IJ.log(e.getMessage());
+			//fall through
+		}
+		summedPixelAreasArray=new float[1];
+		summedPixelAreasArray[0]=0;
+		Interpreter.batchMode=false;
+		return summedPixelAreasArray;
+
+		
 	}
 
 }
