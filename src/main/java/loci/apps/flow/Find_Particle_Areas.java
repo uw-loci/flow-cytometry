@@ -227,7 +227,8 @@ public class Find_Particle_Areas implements PlugInFilter {
 	
 	
 	public static float[] inWiscScanMode(ImagePlus imageToAnalyze, boolean isIntensity, boolean excludeOnEdge, double threshMin, int minSize){
-		float[] summedPixelAreasArray;		
+		float[] summedPixelAreasArray;	
+		Interpreter.batchMode=true;
 		try{
 			//if image is of intensity, do related calculations, else do brightfield calculations
 			if(isIntensity){
@@ -243,7 +244,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 				IJ.run(imageToAnalyze, "Gaussian Blur...", "sigma=5");
 
-				IJ.runPlugIn(imageToAnalyze, "Auto Threshold", "method=Minimum white");
+				IJ.run(imageToAnalyze, "Auto Threshold", "method=Minimum white");
 
 				if(excludeOnEdge) IJ.run(imageToAnalyze, "Analyze Particles...", "size="+minSize+"-Infinity circularity=0.00-1.00 show=Masks display exclude clear include add");
 				else IJ.run(imageToAnalyze, "Analyze Particles...", "size="+minSize+"-Infinity circularity=0.00-1.00 show=Masks display clear include add");
@@ -253,6 +254,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 			ResultsTable resTab = ResultsTable.getResultsTable();
 			if(resTab.getCounter()>0){
 				//get the values under the column "Area"
+				imageToAnalyze.close();
 				return summedPixelAreasArray = resTab.getColumn(resTab.getColumnIndex("Area"));
 			}
 		}catch(Exception e){
