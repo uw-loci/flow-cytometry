@@ -11,7 +11,6 @@ import ij.measure.ResultsTable;
 import ij.plugin.Duplicator;
 import ij.plugin.frame.RoiManager;
 import ij.process.ByteProcessor;
-import ij.process.ShortProcessor;
 
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
@@ -25,15 +24,13 @@ public class FlowCyto {
 	private static ImagePlus imp, impBF, impIN;
 	private static ImageStack stack, stackBF, stackIN;
 	private static int nSlices, nSlicesBF, nSlicesIN;
-//	private static ByteProcessor bp;
-	private static ShortProcessor sp;
+	private static ByteProcessor bp;
 	private static ColorModel theCM;	
 	//	private static String s_Name, s_Experiment, s_Params, s_Date, tempImageName;
 	private static double pixelMicronSquared;
-	private static short[] dummyData;
+	private static byte[] dummyData;
 	private static Duplicator dup;
 	private static float sumIntensityAreasHolder;
-	private static long debugTimeStart;
 
 
 	@SuppressWarnings("static-access")
@@ -48,8 +45,7 @@ public class FlowCyto {
 		imp.close();
 		impBF.close();
 		impIN.close();
-		sp=null;
-
+		bp=null;
 		try{
 			ResultsTable.getResultsTable().reset();
 			RoiManager.getInstance2().dispose();		
@@ -86,64 +82,64 @@ public class FlowCyto {
 			for(int ii=0 ; ii<256 ; ii++)
 				r[ii]=(byte)ii;
 
-			theCM = new IndexColorModel(8, 256, r,r,r);		//8, 256, r,g,b...but r,g,and b are all byte[256], exactly the same...
-			ShortProcessor initSP = new ShortProcessor(width,height); 			
-			dummyData = new short[width*height];
-			sp = new ShortProcessor(width,height,dummyData, theCM);
-			sp.createImage();
+			theCM = new IndexColorModel(8, 256, r,r,r);
+			ByteProcessor initBP = new ByteProcessor(width,height); 			
+			dummyData = new byte[width*height];
+			bp = new ByteProcessor(width,height,dummyData, theCM);
+			bp.createImage();
 
 			mode=mode.toLowerCase();
 
 			if ("brightfield".equals(mode)) {
-				impBF = new ImagePlus("Brightfield images",	initSP);
+				impBF = new ImagePlus("Brightfield images",	initBP);
 				stackBF = new ImageStack(width,height, theCM);
 				impBF.show();
 				impBF.unlock();
 
-				stackBF.addSlice("Slice "+nSlicesBF, sp);
+				stackBF.addSlice("Slice "+nSlicesBF, bp);
 				impBF.setStack("Brightfield images", stackBF);
 				impBF.setSlice(1);	
 				impBF.unlock();
 			}
 			else if ("intensity".equals(mode)) {
-				impIN = new ImagePlus("Intensity images", initSP);
+				impIN = new ImagePlus("Intensity images", initBP);
 				stackIN = new ImageStack(width,height, theCM);
 				impIN.show();
 				impIN.unlock();
 
-				stackIN.addSlice("Slice "+nSlicesIN, sp);
+				stackIN.addSlice("Slice "+nSlicesIN, bp);
 				impIN.setStack("Intensity images", stackIN);
 				impIN.setSlice(1);
 				impIN.unlock();
 			}
 			else if ("both".equals(mode)) {
-				impBF = new ImagePlus("Brightfield images",	initSP);
+				impBF = new ImagePlus("Brightfield images",	initBP);
 				stackBF = new ImageStack(width,height, theCM);
 				impBF.show();
 				impBF.unlock();
 
-				stackBF.addSlice("Slice "+nSlicesBF, sp);
+				stackBF.addSlice("Slice "+nSlicesBF, bp);
 				impBF.setStack("Brightfield images", stackBF);
 				impBF.setSlice(1);	
 				impBF.unlock();
 
-				impIN = new ImagePlus("Intensity images", initSP);
+				impIN = new ImagePlus("Intensity images", initBP);
 				stackIN = new ImageStack(width,height, theCM);
 				impIN.show();
 				impIN.unlock();
 
-				stackIN.addSlice("Slice "+nSlicesIN, sp);
+				stackIN.addSlice("Slice "+nSlicesIN, bp);
 				impIN.setStack("Intensity images", stackIN);
 				impIN.setSlice(1);
 				impIN.unlock();
 			}
 			else {
-				imp = new ImagePlus("Islet images",	initSP);
+				imp = new ImagePlus("Islet images",	initBP);
 				stack = new ImageStack(width,height, theCM);
 				imp.show();
 				imp.unlock();
 
-				stack.addSlice("Slice "+nSlices, sp);
+				stack.addSlice("Slice "+nSlices, bp);
 				imp.setStack("Islet images", stack);
 				imp.setSlice(1);	
 				imp.unlock();
@@ -169,16 +165,15 @@ public class FlowCyto {
 	}
 
 	@SuppressWarnings("static-access")
-	public static void showImage(int mode, int width, int height, short[] imageData) {
+	public static void showImage(int mode, int width, int height, byte[] imageData) {
 		try{
 			long initialTime = System.nanoTime();
-		//	bp = new ByteProcessor(width,height,imageData, theCM);
-			sp = new ShortProcessor(width, height, imageData, theCM, true);
-	//		bp.createImage();
+			bp = new ByteProcessor(width,height,imageData, theCM);
+			bp.createImage();
 
 			//brightfield
 			if (mode == 1) {
-				stackBF.addSlice("Slice "+nSlicesBF, sp);
+				stackBF.addSlice("Slice "+nSlicesBF, bp);
 				impBF.setStack("Brightfield Images", stackBF);
 				impBF.setSlice(stackBF.getSize());
 				impBF.show();
@@ -191,7 +186,7 @@ public class FlowCyto {
 
 			//intensity
 			else if (mode == 2) {
-				stackIN.addSlice("Slice "+nSlicesIN, sp);
+				stackIN.addSlice("Slice "+nSlicesIN, bp);
 				impIN.setStack("Intensity Images", stackIN);
 				impIN.setSlice(stackIN.getSize());
 				impIN.show();		
@@ -204,7 +199,7 @@ public class FlowCyto {
 
 			//default
 			else {
-				stack.addSlice("Slice "+nSlices, sp);
+				stack.addSlice("Slice "+nSlices, bp);
 				imp.setStack("Islet Images", stack);
 				imp.setSlice(stack.getSize());
 				imp.show();
@@ -354,14 +349,14 @@ public class FlowCyto {
 					}
 					if((sumBFPixelAreas!=0) && ((sumIntensityAreasHolder/sumBFPixelAreas) >= compareTOLow) && ((sumIntensityAreasHolder/sumBFPixelAreas) <= compareTOHigh)){
 
-						//-----------------------FOR DEBUG PURPOSES--------------------//
-						IJ.log("plugin finished -TRUE- on brightfield ratio image "+nSlicesBF+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
-						//-------------------------------------------------------------//
-						//-----------------------FOR DEBUG PURPOSES--------------------//
-						IJ.log("_");
-						//-------------------------------------------------------------//
-
-						return true;
+					//-----------------------FOR DEBUG PURPOSES--------------------//
+					IJ.log("plugin finished -TRUE- on brightfield ratio image "+nSlicesBF+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
+					//-------------------------------------------------------------//
+					//-----------------------FOR DEBUG PURPOSES--------------------//
+					IJ.log("_");
+					//-------------------------------------------------------------//
+					
+					return true;
 					}
 
 				}catch(Exception e){
@@ -372,14 +367,14 @@ public class FlowCyto {
 					}
 					if((sumBFPixelAreas!=0) && ((sumIntensityAreasHolder/sumBFPixelAreas) >= compareTOLow) && ((sumIntensityAreasHolder/sumBFPixelAreas) <= compareTOHigh)){
 
-						//-----------------------FOR DEBUG PURPOSES--------------------//
-						IJ.log("plugin finished TRUE on ISLET DEFAULT image "+nSlicesIN+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
-						//-------------------------------------------------------------//
-						//-----------------------FOR DEBUG PURPOSES--------------------//
-						IJ.log("_");
-						//-------------------------------------------------------------//
-
-						return true;
+					//-----------------------FOR DEBUG PURPOSES--------------------//
+					IJ.log("plugin finished TRUE on ISLET DEFAULT image "+nSlicesIN+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
+					//-------------------------------------------------------------//
+					//-----------------------FOR DEBUG PURPOSES--------------------//
+					IJ.log("_");
+					//-------------------------------------------------------------//
+					
+					return true;
 					}
 
 				}
