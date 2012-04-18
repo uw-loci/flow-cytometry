@@ -31,6 +31,7 @@ public class FlowCyto {
 	private static byte[] dummyData;
 	private static Duplicator dup;
 	private static float sumIntensityAreasHolder;
+	private static long debugTimeStart;
 
 
 	@SuppressWarnings("static-access")
