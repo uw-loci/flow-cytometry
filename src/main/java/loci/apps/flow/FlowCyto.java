@@ -356,7 +356,7 @@ public class FlowCyto {
 					//-----------------------FOR DEBUG PURPOSES--------------------//
 					IJ.log("_");
 					//-------------------------------------------------------------//
-					
+					sumIntensityAreasHolder=0;
 					return true;
 					}
 
@@ -374,7 +374,7 @@ public class FlowCyto {
 					//-----------------------FOR DEBUG PURPOSES--------------------//
 					IJ.log("_");
 					//-------------------------------------------------------------//
-					
+					sumIntensityAreasHolder=0;
 					return true;
 					}
 
@@ -392,7 +392,7 @@ public class FlowCyto {
 		//-----------------------FOR DEBUG PURPOSES--------------------//
 		IJ.log("_");
 		//-------------------------------------------------------------//
-
+		sumIntensityAreasHolder=0;
 		return false;
 	}
 
