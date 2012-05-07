@@ -20,7 +20,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 	private ImagePlus imp, origImage;
 	private int stackSize, curSlice, sizeMin;
 	private Duplicator duplicator;
-	private TextWindow twindow;
+	private static TextWindow twindow;
 	
 
 	/**
@@ -211,9 +211,11 @@ public class Find_Particle_Areas implements PlugInFilter {
 			//sum the values in array to find average
 			for(int i=0; i<totalParticleValues.size(); i++)
 				particleValue+=totalParticleValues.get(i);
-			//make custom entry for average and median
-			twindow.append("Average pixel area over    \t"+ numEntries + "\t    slices is    \t"+(particleValue/numEntries));
-			twindow.append("Median pixel area from    \t"+ numEntries + "\t    slices is    \t"+(totalParticleValues.get(numEntries/2)));
+			//make custom entry for average median min and max
+			twindow.append("Average particle pixel area over    \t"+ numEntries + "\t    slices is    \t"+(particleValue/numEntries));
+			twindow.append("Median particle pixel area from    \t"+ numEntries + "\t    slices is    \t"+(totalParticleValues.get(numEntries/2)));
+			twindow.append("MIN particle pixel area over    \t"+ numEntries + "\t    slices is    \t"+(totalParticleValues.get(0)));
+			twindow.append("MAX particle pixel area over    \t"+ numEntries + "\t    slices is    \t"+(totalParticleValues.get(totalParticleValues.size()-1)));
 			
 			imageToAnalyze.flush();
 			imageToAnalyze.close();
@@ -223,6 +225,10 @@ public class Find_Particle_Areas implements PlugInFilter {
 			IJ.showMessage("Error with processing stack.");
 			IJ.log(e.getMessage());
 		}
+	}
+	
+	public static TextWindow getTextWindow(){
+		return twindow;
 	}
 	
 	

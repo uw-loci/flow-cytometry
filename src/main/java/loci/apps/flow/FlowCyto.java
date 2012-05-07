@@ -11,6 +11,7 @@ import ij.measure.ResultsTable;
 import ij.plugin.Duplicator;
 import ij.plugin.frame.RoiManager;
 import ij.process.ByteProcessor;
+import ij.text.TextWindow;
 
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
@@ -147,7 +148,7 @@ public class FlowCyto {
 			}
 			if (pixelsPerMicron > 0){ 
 				pixelMicronSquared = pixelsPerMicron*pixelsPerMicron;
-				IJ.run("Set Scale...", "distance="+width+" known="+((double)width/pixelsPerMicron) +" pixel=1 unit=microns");
+//				IJ.run("Set Scale...", "distance="+width+" known="+((double)width/pixelsPerMicron) +" pixel=1 unit=microns");
 				//-----------------------FOR DEBUG PURPOSES--------------------//
 				IJ.log("ImageJ started for "+mode+" mode in "+ ((System.nanoTime() - initialTime)/1000) +"us");
 				//-------------------------------------------------------------//
@@ -294,6 +295,53 @@ public class FlowCyto {
 			IJ.log(e.getMessage());
 		}
 		return false;
+	}
+	
+	@SuppressWarnings("static-access")
+	public static void calcTrialRatio(){
+		ImagePlus impIN2=new ImagePlus(), tempimp=new ImagePlus();
+		ImageStack stackIN2 = new ImageStack();
+		float[] summedPixelAreasArray, foundInSliceArray;
+		float avgBF, medBF, minBF, maxBF, avgIN, medIN, minIN, maxIN;		
+
+		impBF.setSlice(1);
+		IJ.run(impBF, "Find Particle Areas", "channel=Brightfield threshold_minimum=170 size_minimum=100 run_plugin_over_entire_stack");
+
+		ResultsTable rtab = Find_Particle_Areas.getTextWindow().getTextPanel().getResultsTable();
+		summedPixelAreasArray = rtab.getColumn(rtab.getColumnIndex("Area"));
+		maxBF = summedPixelAreasArray[summedPixelAreasArray.length-1];
+		minBF = summedPixelAreasArray[summedPixelAreasArray.length-2];
+		medBF = summedPixelAreasArray[summedPixelAreasArray.length-3];
+		avgBF = summedPixelAreasArray[summedPixelAreasArray.length-4];
+		
+		foundInSliceArray = rtab.getColumn(rtab.getColumnIndex("Slice"));
+		for(int i=0; i<foundInSliceArray.length; i++){
+			int index = (int)foundInSliceArray[i];
+			tempimp = dup.run(impIN, index, index);
+			stackIN2.addSlice(tempimp.getProcessor());
+			impIN2.setStack(stackIN2);
+			imp.unlock();
+		}
+		
+		impIN2.setSlice(1);
+		IJ.run(impIN2, "Find Particle Areas", "channel=Intensity threshold_minimum=20 size_minimum=0 run_plugin_over_entire_stack");
+		rtab = Find_Particle_Areas.getTextWindow().getTextPanel().getResultsTable();
+		summedPixelAreasArray = rtab.getColumn(rtab.getColumnIndex("Area"));
+		maxIN = summedPixelAreasArray[summedPixelAreasArray.length-1];
+		minIN = summedPixelAreasArray[summedPixelAreasArray.length-2];
+		medIN = summedPixelAreasArray[summedPixelAreasArray.length-3];
+		avgIN = summedPixelAreasArray[summedPixelAreasArray.length-4];
+		
+		IJ.log("Average pixel ratio: "+avgIN/avgBF);
+		IJ.log("Median pixel ratio: "+medIN/medBF);		
+		IJ.log("Minimum pixel ratio: "+minIN/minBF);
+		IJ.log("Maximum pixel ratio: "+maxIN/maxBF);
+		
+		impIN2.flush();
+		impIN2.close();
+		tempimp.flush();
+		tempimp.close();
+		stackIN2=null;
 	}
 
 	@SuppressWarnings("static-access")
