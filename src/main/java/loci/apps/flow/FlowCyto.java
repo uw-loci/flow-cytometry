@@ -230,14 +230,15 @@ public class FlowCyto {
 		try{
 			if(isIntensityImage){				
 				try{
-					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(impIN, nSlicesIN, nSlicesIN), true, excludeOnEdge, thresholdMin, sizeMin);
+					//inWiscScanMode(ImagePlus imageToAnalyze, boolean isIntensity, boolean excludeOnEdge, double threshMin, int minSize)
+					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(impIN, nSlicesIN, nSlicesIN), true, excludeOnEdge, thresholdMin, 0);
 
 					//-----------------------FOR DEBUG PURPOSES--------------------//
 					//IJ.log("plugin finished on intensity image "+nSlicesIN+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
 					//-------------------------------------------------------------//
 
 				}catch(Exception e){ 
-					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(imp, nSlices, nSlices), true, excludeOnEdge, thresholdMin, sizeMin);
+					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(imp, nSlices, nSlices), true, excludeOnEdge, thresholdMin, 0);
 
 					//-----------------------FOR DEBUG PURPOSES--------------------//
 					//IJ.log("plugin finished on ISLET DEFAULT image "+nSlicesIN+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
@@ -414,7 +415,7 @@ public class FlowCyto {
 			if(isIntensityImage){				
 				try{
 					sumIntensityAreasHolder=0;
-					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(impIN, nSlicesIN, nSlicesIN), true, excludeOnEdge, thresholdMin, sizeMin);
+					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(impIN, nSlicesIN, nSlicesIN), true, excludeOnEdge, thresholdMin, 0);
 					for(int i=0; i<summedPixelAreasArray.length; i++){
 						sumIntensityAreasHolder+=summedPixelAreasArray[i];
 					}	

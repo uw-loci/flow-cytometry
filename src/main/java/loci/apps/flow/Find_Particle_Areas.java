@@ -137,7 +137,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 				imageToAnalyze.getProcessor().setThreshold(threshMin, 255, ImageProcessor.RED_LUT);
 				IJ.run(imageToAnalyze, "Convert to Mask", null);
 
-				if(excludeEdgeParticles) IJ.run(imageToAnalyze, "Analyze Particles...", "size=1-Infinity circularity=0.00-1.00 show=Masks display exclude clear add");
+				if(excludeEdgeParticles) IJ.run(imageToAnalyze, "Analyze Particles...", "size=1-Infinity circularity=0.00-1.00 show=Masks display clear include add");
 				else IJ.run(imageToAnalyze, "Analyze Particles...", "size=1-Infinity circularity=0.00-1.00 show=Masks display clear add");
 			}			
 			else{
@@ -305,9 +305,9 @@ public class Find_Particle_Areas implements PlugInFilter {
 			if(isIntensity){
 				imageToAnalyze.getProcessor().setThreshold(threshMin, 255, ImageProcessor.RED_LUT);
 				IJ.run(imageToAnalyze, "Convert to Mask", null);
-
-				if(excludeOnEdge) IJ.run(imageToAnalyze, "Analyze Particles...", "size="+minSize+"-Infinity circularity=0.00-1.00 show=Masks display exclude clear add");
-				else IJ.run(imageToAnalyze, "Analyze Particles...", "size="+minSize+"-Infinity circularity=0.00-1.00 show=Masks display clear add");
+				
+				if(excludeOnEdge) IJ.run(imageToAnalyze, "Analyze Particles...", "size=1-Infinity circularity=0.00-1.00 show=Masks display exclude clear include add");
+				else IJ.run(imageToAnalyze, "Analyze Particles...", "size=1-Infinity circularity=0.00-1.00 show=Masks display clear include add");
 			}			
 			else{
 				IJ.run(imageToAnalyze, "Find Edges", null);
