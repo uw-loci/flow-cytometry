@@ -17,8 +17,6 @@ import java.awt.image.IndexColorModel;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
-
 
 public class FlowCyto {
 
@@ -36,6 +34,9 @@ public class FlowCyto {
 	private static float sumIntensityAreasHolder;
 	private static long debugTimeStart;
 
+	public static void main(String[] args){
+		System.out.println("Please start WiscScan");
+	}
 
 	@SuppressWarnings("static-access")
 	public static void startImageJ() {
@@ -57,8 +58,6 @@ public class FlowCyto {
 			//fall through - happens when RoiManager isnt init'ed...
 		}
 
-		IJ = null;	
-
 		try{
 			//	IJ.run("Close All");
 			WindowManager.closeAllWindows();
@@ -67,13 +66,14 @@ public class FlowCyto {
 		}catch(Exception e){
 			garbageCollect();
 		}
+		imagej = null;
+		IJ = null;	
+
 	}
 
-	@SuppressWarnings("static-access")
 	public static void init(String mode, int width, int height, double pixelsPerMicron) {
 		try{
-
-			long initialTime = System.nanoTime();
+			//			long initialTime = System.nanoTime();
 			nSlices=0;
 			nSlicesBF=0;
 			nSlicesIN=0;
@@ -168,10 +168,9 @@ public class FlowCyto {
 		IJ.run("Bio-Formats Importer", "open=["+filename+"] autoscale color_mode=Default view=Hyperstack stack_order=XYCZT");
 	}
 
-	@SuppressWarnings("static-access")
 	public static void showImage(int mode, int width, int height, byte[] imageData) {
 		try{
-			long initialTime = System.nanoTime();
+			//			long initialTime = System.nanoTime();
 			bp = new ByteProcessor(width,height,imageData, theCM);
 			bp.createImage();
 
@@ -220,18 +219,23 @@ public class FlowCyto {
 	public static boolean foundParticle(boolean isIntensityImage, boolean excludeOnEdge, double thresholdMin, int sizeMin, float compareTOLow, float compareTOHigh){
 
 		//-----------------------FOR DEBUG PURPOSES--------------------//
-		long initialTime = System.nanoTime();
+		//long initialTime = System.nanoTime();
 		//IJ.log("Gating method started on slice "+nSlicesIN+" at \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
 		//-------------------------------------------------------------//
 
-		float[] summedPixelAreasArray;
+		float sumIntensity=0;
 		Interpreter.batchMode=true;
 
 		try{
+			float[] summedPixelAreasArray;
 			if(isIntensityImage){				
 				try{
 					//inWiscScanMode(ImagePlus imageToAnalyze, boolean isIntensity, boolean excludeOnEdge, double threshMin, int minSize)
 					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(impIN, nSlicesIN, nSlicesIN), true, excludeOnEdge, thresholdMin, 0);
+					for (int i = 0; i < summedPixelAreasArray.length; i++){
+						if(summedPixelAreasArray[i] < 16350)
+							sumIntensity += summedPixelAreasArray[i];
+					}
 
 					//-----------------------FOR DEBUG PURPOSES--------------------//
 					//IJ.log("plugin finished on intensity image "+nSlicesIN+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
@@ -239,6 +243,10 @@ public class FlowCyto {
 
 				}catch(Exception e){ 
 					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(imp, nSlices, nSlices), true, excludeOnEdge, thresholdMin, 0);
+					for (int i = 0; i < summedPixelAreasArray.length; i++){
+						if(summedPixelAreasArray[i] < 16350)
+							sumIntensity += summedPixelAreasArray[i];
+					}
 
 					//-----------------------FOR DEBUG PURPOSES--------------------//
 					//IJ.log("plugin finished on ISLET DEFAULT image "+nSlicesIN+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
@@ -268,20 +276,24 @@ public class FlowCyto {
 			//IJ.log("particle areas calculated in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
 			//-------------------------------------------------------------//
 
-			for(int i=0; i<summedPixelAreasArray.length;i++)
-			{
-				if(summedPixelAreasArray[i] >= compareTOLow && summedPixelAreasArray[i] <= compareTOHigh){
+			if (isIntensityImage){
+				if((sumIntensity >= compareTOLow) && (sumIntensity <= compareTOHigh))
+					return true;
+			}
+			else{
+				for(int i=0; i<summedPixelAreasArray.length;i++){
+					if(((summedPixelAreasArray[i]*0.85) >= compareTOLow) && ((summedPixelAreasArray[i]*0.85) <= compareTOHigh)){	//CORRECTION FACTOR OF 0.85
 
-					//-----------------------FOR DEBUG PURPOSES--------------------//
-					//IJ.log("gating boolean -TRUE- calculated in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
-					//-------------------------------------------------------------//
-					//-----------------------FOR DEBUG PURPOSES--------------------//
-					//IJ.log("_");
-					//-------------------------------------------------------------//
+						//-----------------------FOR DEBUG PURPOSES--------------------//
+						//IJ.log("gating boolean -TRUE- calculated in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
+						//-------------------------------------------------------------//
+						//-----------------------FOR DEBUG PURPOSES--------------------//
+						//IJ.log("_");
+						//-------------------------------------------------------------//
 
-					return true;					
+						return true;					
+					}
 				}
-
 			}
 
 			//-----------------------FOR DEBUG PURPOSES--------------------//
@@ -310,7 +322,7 @@ public class FlowCyto {
 			//find the particles in BF image, store min max avg and median
 			IJ.log("brightfield image area calculation started...");
 			impBF.setSlice(1);
-	//		IJ.run(impBF, "Find Particle Areas", "channel=Brightfield threshold_minimum=170 size_minimum="+sizeMin+" run_plugin_over_entire_stack");
+			//		IJ.run(impBF, "Find Particle Areas", "channel=Brightfield threshold_minimum=170 size_minimum="+sizeMin+" run_plugin_over_entire_stack");
 			float[] resultsArray = Find_Particle_Areas.analyzeFullStackInWiscScanMode(impBF, "brightfield", thresholdMin, sizeMin, false);
 			if(resultsArray!=null){
 				if (resultsArray.length!=0){
@@ -332,7 +344,7 @@ public class FlowCyto {
 
 			//duplicate the intensity image stack with ONLY the slices with particles from BF image stack
 			//improves accuracy of number since there is lots of scattered noise in realtime collection
-		
+
 
 			if(foundInSliceArray.length!=0){
 				IJ.log("started isolating frames with particles...");
@@ -348,7 +360,7 @@ public class FlowCyto {
 					impIN2.show();
 					impIN2.unlock();
 				}				
-	
+
 				//then repeat the med avg max and min calculations on this substack
 				IJ.log("intensity image area calculation started...");
 				impIN2.setSlice(1);
@@ -400,95 +412,23 @@ public class FlowCyto {
 		}
 	}
 
+	public static void calcTrialRatio2(int sizeMin, int threshMin){
+
+	}
+
 	@SuppressWarnings("static-access")
 	public static boolean getRatioBoolean(boolean isIntensityImage, boolean excludeOnEdge, double thresholdMin, int sizeMin, float compareTOLow, float compareTOHigh){
 
 		//-----------------------FOR DEBUG PURPOSES--------------------//
-		long initialTime = System.nanoTime();
+		//long initialTime = System.nanoTime();
 		//IJ.log("Pixel areas summing method started on slice "+nSlicesIN+" at \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
 		//-------------------------------------------------------------//
-
-		float[] summedPixelAreasArray;
 		Interpreter.batchMode=true;
 
 		try{
-			if(isIntensityImage){				
-				try{
-					sumIntensityAreasHolder=0;
-					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(impIN, nSlicesIN, nSlicesIN), true, excludeOnEdge, thresholdMin, 0);
-					for(int i=0; i<summedPixelAreasArray.length; i++){
-						sumIntensityAreasHolder+=summedPixelAreasArray[i];
-					}	
-
-					//-----------------------FOR DEBUG PURPOSES--------------------//
-					//IJ.log("plugin finished on intensity image "+nSlicesIN+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
-					//-------------------------------------------------------------//
-					//-----------------------FOR DEBUG PURPOSES--------------------//
-					//IJ.log("_");
-					//-------------------------------------------------------------//
-
-					return false;
-
-				}catch(Exception e){ 
-					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(imp, nSlices, nSlices), true, excludeOnEdge, thresholdMin, sizeMin);
-					for(int i=0; i<summedPixelAreasArray.length; i++){
-						sumIntensityAreasHolder+=summedPixelAreasArray[i];
-					}
-
-					//-----------------------FOR DEBUG PURPOSES--------------------//
-					//IJ.log("plugin finished on ISLET DEFAULT image "+nSlicesIN+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
-					//-------------------------------------------------------------//
-					//-----------------------FOR DEBUG PURPOSES--------------------//
-					//IJ.log("_");
-					//-------------------------------------------------------------//
-
-					return false;
-				}
-			}
-			else {
-				try{		
-					float sumBFPixelAreas=0;
-					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(impBF, nSlicesBF, nSlicesBF), false, excludeOnEdge, thresholdMin, sizeMin);
-					for(int i=0; i<summedPixelAreasArray.length; i++){
-						sumBFPixelAreas+=summedPixelAreasArray[i];
-					}
-					if((sumBFPixelAreas!=0) && ((sumIntensityAreasHolder/sumBFPixelAreas) >= compareTOLow) && ((sumIntensityAreasHolder/sumBFPixelAreas) <= compareTOHigh)){
-
-						//-----------------------FOR DEBUG PURPOSES--------------------//
-						//IJ.log("plugin finished -TRUE- on brightfield ratio image "+nSlicesBF+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
-						//-------------------------------------------------------------//
-						//-----------------------FOR DEBUG PURPOSES--------------------//
-						//IJ.log("_");
-						//-------------------------------------------------------------//
-						IJ.log("Ratio for captured particle: " + sumIntensityAreasHolder/sumBFPixelAreas);
-						sumIntensityAreasHolder=0;
-						return true;
-					}
-
-				}catch(Exception e){
-					float sumBFPixelAreas=0;
-					summedPixelAreasArray=Find_Particle_Areas.inWiscScanMode(dup.run(imp, nSlices, nSlices), false, excludeOnEdge, thresholdMin, sizeMin);
-					for(int i=0; i<summedPixelAreasArray.length; i++){
-						sumBFPixelAreas+=summedPixelAreasArray[i];
-					}
-					if((sumBFPixelAreas!=0) && ((sumIntensityAreasHolder/sumBFPixelAreas) >= compareTOLow) && ((sumIntensityAreasHolder/sumBFPixelAreas) <= compareTOHigh)){
-
-						//-----------------------FOR DEBUG PURPOSES--------------------//
-						//IJ.log("plugin finished TRUE on ISLET DEFAULT image "+nSlicesIN+" in \t \t \t"+ ((System.nanoTime() - initialTime)/1000000) +"ms");
-						//-------------------------------------------------------------//
-						//-----------------------FOR DEBUG PURPOSES--------------------//
-						//IJ.log("_");
-						//-------------------------------------------------------------//
-						IJ.log("Ratio for captured particle: " + sumIntensityAreasHolder/sumBFPixelAreas);
-						sumIntensityAreasHolder=0;
-						return true;
-					}
-
-				}
-			}
-
+			return Find_Particle_Areas.ratioModeInWiscScan(impBF, impIN, thresholdMin, sizeMin, excludeOnEdge, compareTOLow, compareTOHigh, nSlicesBF);
 		}catch (Exception e){
-			IJ.log("Problem in getting particle areas");
+			IJ.log("Problem in getting particle RATIO boolean");
 			IJ.log(e.getMessage());
 		}
 
@@ -498,7 +438,6 @@ public class FlowCyto {
 		//-----------------------FOR DEBUG PURPOSES--------------------//
 		//IJ.log("_");
 		//-------------------------------------------------------------//
-		sumIntensityAreasHolder=0;
 		return false;
 	}
 

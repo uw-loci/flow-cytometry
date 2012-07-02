@@ -61,7 +61,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>loci.apps.flow.FlowCytometry</mainClass>
+              <mainClass>loci.apps.flow.FlowCyto</mainClass>
               <packageName>loci.apps.flow</packageName>
             </manifest>
           </archive>
