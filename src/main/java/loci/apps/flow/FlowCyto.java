@@ -15,7 +15,6 @@ import ij.text.TextWindow;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.io.IOException;
-import java.util.ArrayList;
 
 
 public class FlowCyto {
@@ -31,9 +30,10 @@ public class FlowCyto {
 	private static double pixelMicronSquared;
 	private static byte[] dummyData;
 	private static Duplicator dup;
-	private static float sumIntensityAreasHolder;
+//	private static float sumIntensityAreasHolder;
 	private static long debugTimeStart;
-
+	private static TextWindow twindow;
+	
 	public static void main(String[] args){
 		System.out.println("Please start WiscScan");
 	}
@@ -136,6 +136,13 @@ public class FlowCyto {
 				impIN.setStack("Intensity images", stackIN);
 				impIN.setSlice(1);
 				impIN.unlock();
+				try{
+					twindow.close(true);		//if previous text window is open then this will prompt to save and close...will throw excpetion if first time
+				} catch (Exception e){
+					//fall through				//if no such text window exists yet, fall through and create one.
+				}
+				twindow = new TextWindow("RATIO of Found Particles", "Slice \t Brightfield Area \t Intensity Area \t RATIO ", "", 800, 300);
+				
 			}
 			else {
 				imp = new ImagePlus("Islet images",	initBP);
@@ -311,109 +318,9 @@ public class FlowCyto {
 	}
 
 	@SuppressWarnings("static-access")
-	public static void calcTrialRatio(int sizeMin, double thresholdMin){
-		ImagePlus impIN2=new ImagePlus(), tempimp=new ImagePlus();
-		ImageStack stackIN2 = new ImageStack(128, 128, theCM);
-
-		float avgBF=0, medBF=0, minBF=0, maxBF=0, avgIN=0, medIN=0, minIN=0, maxIN=0;
-		TextWindow twindow = new TextWindow("Estimated Ratio Results...", "", "", 800, 300);
-
-		try{
-			//find the particles in BF image, store min max avg and median
-			IJ.log("brightfield image area calculation started...");
-			impBF.setSlice(1);
-			//		IJ.run(impBF, "Find Particle Areas", "channel=Brightfield threshold_minimum=170 size_minimum="+sizeMin+" run_plugin_over_entire_stack");
-			float[] resultsArray = Find_Particle_Areas.analyzeFullStackInWiscScanMode(impBF, "brightfield", thresholdMin, sizeMin, false);
-			if(resultsArray!=null){
-				if (resultsArray.length!=0){
-					maxBF = resultsArray[3];
-					minBF = resultsArray[2];
-					medBF = resultsArray[1];
-					avgBF = resultsArray[0];
-					IJ.log(maxBF + " " + minBF + " " + medBF + " " + avgBF);
-				} else IJ.log("getResults returns an array of lenght 0");
-			} else IJ.log("getResults returns null");
-			IJ.log("brightfield image areas finished..."); 
-
-			//clone the resultsArray to contain just the slices particles are found in
-			IJ.log("getting slice table...");
-			float[] foundInSliceArray = new float[resultsArray.length-4];
-			for(int i=4; i<resultsArray.length; i++)
-				foundInSliceArray[i-4] = resultsArray[i];
-			IJ.log("retrieved slice table");
-
-			//duplicate the intensity image stack with ONLY the slices with particles from BF image stack
-			//improves accuracy of number since there is lots of scattered noise in realtime collection
-
-
-			if(foundInSliceArray.length!=0){
-				IJ.log("started isolating frames with particles...");
-				IJ.log("number of isolated particles: " + foundInSliceArray.length);
-				int index;
-				for(int i=0; i<foundInSliceArray.length; i++){
-					index = (int) foundInSliceArray[i];
-					impIN.setSlice(index);
-					tempimp = dup.run(impIN, index, index);
-					stackIN2.addSlice("slice "+ index, tempimp.getProcessor());
-					impIN2.setStack("Particles", stackIN2);
-					impIN2.setSlice(stackIN2.getSize());
-					impIN2.show();
-					impIN2.unlock();
-				}				
-
-				//then repeat the med avg max and min calculations on this substack
-				IJ.log("intensity image area calculation started...");
-				impIN2.setSlice(1);
-				IJ.run(impIN2, "Find Particle Areas", "channel=Intensity threshold_minimum=20 size_minimum=0 run_plugin_over_entire_stack");
-				resultsArray = Find_Particle_Areas.analyzeFullStackInWiscScanMode(impIN2, "intensity", thresholdMin, sizeMin, false);
-				if(resultsArray!=null && resultsArray.length!=0){
-					maxIN = resultsArray[3];
-					minIN = resultsArray[2];
-					medIN = resultsArray[1];
-					avgIN = resultsArray[0];
-				}
-				IJ.log("intensity image areas finished...");
-
-				impIN2.flush();
-				impIN2.close();
-				tempimp.flush();
-				tempimp.close();
-				stackIN2=null;
-				twindow.append("INTENSITY Average: "+avgIN);
-				twindow.append("INTENSITY Median: "+medIN);
-				twindow.append("INTENSITY Minimum: "+minIN);
-				twindow.append("INTENSITY Maximum: "+maxIN);
-				twindow.append("--------------------------------");
-				twindow.append("BRIGHTFIELD Average: "+avgBF);
-				twindow.append("BRIGHTFIELD Median: "+medBF);
-				twindow.append("BRIGHTFIELD Minimum: "+minBF);
-				twindow.append("BRIGHTFIELD Maximum: "+maxBF);
-				twindow.append("--------------------------------");
-				twindow.append("AVERAGE pixel ratio: "+avgIN/avgBF);
-				twindow.append("MEDIAN pixel ratio: "+medIN/medBF);		
-				twindow.append("MINIMUM pixel ratio: "+minIN/maxBF);
-				twindow.append("MAXIMUM pixel ratio: "+maxIN/minBF);
-			}
-			else{
-				IJ.log("foundInSliceArray has zero size");
-				twindow.append("No particles found to calculate ratio.");
-			}
-
-
-		} catch (Exception e){
-			System.err.println(e.getMessage());
-			System.err.println(e.getStackTrace());
-			IJ.log("error calculating trial ratio: "+e.getMessage());
-			IJ.log(e.getMessage() + "....." + e.getCause());
-			IJ.log(e.getStackTrace().toString());
-		} catch (Throwable e){
-			IJ.log("throwable error");
-			IJ.log(e.getMessage().toString());
-		}
-	}
-
-	public static void calcTrialRatio2(int sizeMin, int threshMin){
-
+	public static void calcTrialRatio(int sizeMin, double thresholdMin, double correctionFactor){
+		IJ.run("Find Particle Areas", "threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" bf="+correctionFactor+" exclude_particles_on_edge " +
+				"run_plugin_over_entire_stack calculate brightfield=[Brightfield images] intensity=[Intensity Images]");
 	}
 
 	@SuppressWarnings("static-access")
@@ -426,7 +333,15 @@ public class FlowCyto {
 		Interpreter.batchMode=true;
 
 		try{
-			return Find_Particle_Areas.ratioModeInWiscScan(impBF, impIN, thresholdMin, sizeMin, excludeOnEdge, compareTOLow, compareTOHigh, nSlicesBF);
+			double CORRECTIONFACTOR = 0.8;			//Ajeet and Dave - to reduce overestimation
+			float[] areas = Find_Particle_Areas.ratioModeInWiscScan(impBF, impIN, thresholdMin, sizeMin, excludeOnEdge, CORRECTIONFACTOR);
+			float bfArea = areas[0];
+			float intArea = areas[1];
+			float ratio = areas[2];
+			if (ratio!=0){
+				twindow.append(nSlicesBF + "\t" + bfArea + "\t" + intArea + "\t" + ratio);
+			}
+			if(ratio>=compareTOLow && ratio<= compareTOHigh) return true;
 		}catch (Exception e){
 			IJ.log("Problem in getting particle RATIO boolean");
 			IJ.log(e.getMessage());

@@ -1,21 +1,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Title:            Find_Particle_Areas
 // Description:		 ImageJ plugin to isolate cell particles in images and image
-//					 stacks. Intended to be used for realtime and analysis of
-//					 flow cytometry experiments. 
+//					 stacks. Intended to be used in realtime and offline analysis
+//					 of flow cytometry experiments. 
 //
 // 					 Three main functions: determining sum pixel area of cell or
 //					 particle in brightfield images, determining sum pixel 
 //					 intensity count in intensity images, and calculating ratio
 //					 of particle intensity per particle area.
 //
-// Author:           Ajeetesh Vivekanandan
+// Author:           Ajeetesh Vivekanandan, UW-Madison LOCI
 // Contact:			 ajeet.vivekanandan@gmail.com
 // Web:				 loci.wisc.edu
 //
 ///////////////////////////////////////////////////////////////////////////////
 /**
- * @author Ajeet Vivekanandan, UW-Madison LOCI
+ * @author Ajeet Vivekanandan 
+ * @author UW-Madison LOCI
  */
 
 package loci.apps.flow;
@@ -58,6 +59,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 	private static ParticleAnalyzer partanlzr;
 	private static ResultsTable rt;
 	private static RoiManager rm;
+	private static double CORRECTIONFACTOR;
 
 
 
@@ -98,6 +100,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 			gd.addMessage ("Special paramters; (thresholdMax = 255, SizeMax=Infinity)");
 			gd.addNumericField ("Threshold_Minimum",  170, 0);
 			gd.addNumericField ("Size_Minimum",  0, 0);
+			gd.addNumericField("BF CORRECTION FACTOR", 1, 3);
 			gd.addCheckbox("Exclude_Particles_on_Edge",true);
 			gd.addCheckbox("Show_summed_areas",false);
 			gd.addCheckbox("Run_Plugin_Over_Entire_Stack", false);
@@ -125,6 +128,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 			myResolution = gd.getNextChoice();
 			thresholdMin= (double) gd.getNextNumber();
 			sizeMin= (int) gd.getNextNumber();
+			CORRECTIONFACTOR = gd.getNextNumber();
 			exclude=gd.getNextBoolean(); 
 			doTheSum= gd.getNextBoolean();
 			dofullStack = gd.getNextBoolean();
@@ -140,7 +144,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 			else if (myResolution.equals("512x512")) imageRes=512;
 			else imageRes = 128;
 
-			//check option for analyze full stack, bypass other methods if so.
+			//check options, bypass other methods.
 			//uses original stacked image, not single image
 			if(doRatio) {
 				int index = gd.getNextChoiceIndex();
@@ -172,13 +176,38 @@ public class Find_Particle_Areas implements PlugInFilter {
 			Interpreter.batchMode=false;
 		}
 	}
-
+	/**
+	 * Creates a ratio mask stack for both brightfield and intensity images. Intensity image masks contain only
+	 * the pixels above threshold INSIDE the brightfield image's cell outline (if there is a cell). 
+	 *
+	 * @param doFullStack Run analysis on single image if false, run over entire stack if true
+	 */
 	private ImagePlus createRatioMask(boolean doFullStack){
-		return createRatioMask(bfImp, intImp, thresholdMin, sizeMin, exclude, imageRes, doFullStack, true);
+		return createRatioMask(bfImp, intImp, thresholdMin, sizeMin, exclude, doFullStack, true);
 	}
-	//TODO
-	private static ImagePlus createRatioMask(ImagePlus bfImage, ImagePlus intImage, double threshMin, int sizeMin, boolean excludeOnEdge, int imageRes, boolean doFullStack, boolean showMask){
+	
+	/**
+	 * Creates a ratio mask stack for both brightfield and intensity images. Intensity image masks contain only
+	 * the pixels above threshold INSIDE the brightfield image's cell outline (if there is a cell). 
+	 *
+	 * @param bfImage Brightfield image or image stack to be analyzed
+	 * @param intImage Intensity image or image stack to be analyzed
+	 * @param threshMin Minimum threshold for intensity image, max is set to 255
+	 * @param sizeMin Minimum size limit for particles in brightfield image, max is positive infinity
+	 * @param excludeOnEdge Option to exclude particles on edge of images
+	 * @param doFullStack Run analysis on single image if false, run over entire stack if true
+	 * @param showMasks Display mask stacks of bf and intensity masks if true
+	 */
+	private static ImagePlus createRatioMask(ImagePlus bfImage, ImagePlus intImage, double threshMin, int sizeMin, boolean excludeOnEdge, boolean doFullStack, boolean showMask){
 		try{
+			
+			try{
+				twindow.close(true);		//if previous text window is open then this will prompt to save and close...will throw excpetion if first time
+			} catch (Exception e){
+				//fall through				//if no such text window exists yet, fall through and create one.
+			}
+			twindow = new TextWindow("RATIO of Found Particles", "Slice \t Brightfield Area \t Intensity Area \t RATIO ", "", 800, 300);
+			
 			//initialize
 			ImagePlus tempInt = null, tempBF = null;
 			intMask = new ImagePlus("Cell Intensity inside Outlines");
@@ -186,36 +215,39 @@ public class Find_Particle_Areas implements PlugInFilter {
 			ImageCalculator ic = new ImageCalculator();
 			Duplicator dup = new Duplicator();
 			ImageStack intMaskStack = null, bfMaskStack = null;
-			float ratio = 0;
-			float[] areas;
+			float ratio = 0, bfAreas = 0, intAreas = 0;
+			float[] areas = null;
 
-			//we dont need the colormodel or stack if image is not going to be displayed (i.e. in WiscScan operations, we process only
+			//dont need the colormodel or stack if image is not going to be displayed (i.e. WiscScan operations process only
 			// one image at a time, and wouldn't want a new image window appear for each of 3000+ images)
 			if(showMask){
 				byte[] r = new byte[256];
 				for(int ii=0 ; ii<256 ; ii++)
 					r[ii]=(byte)ii;
 				ColorModel theCM = new IndexColorModel(8, 256, r,r,r);
-				intMaskStack = new ImageStack(imageRes, imageRes, theCM);
-				bfMaskStack = new ImageStack(imageRes, imageRes, theCM);
+				intMaskStack = new ImageStack(intImage.getWidth(), intImage.getHeight(), theCM);
+				bfMaskStack = new ImageStack(bfImage.getWidth(), bfImage.getHeight(), theCM);
 				rt = ResultsTable.getResultsTable();
 				if(rt == null) rt = new ResultsTable();
 				rm = RoiManager.getInstance2();		
 				if(rm==null) rm = new RoiManager();
-
-
 			} 	
-
+			
+			//for every image in the stack
 			for(int i=bfImage.getCurrentSlice(); i<=bfImage.getStackSize(); i++){
 				bfImage.setSlice(i);
 				intImage.setSlice(i);
-
+				
+				//create the masks
 				findParticles(dup.run(bfImage, i, i), "Brightfield", 0, sizeMin, excludeOnEdge, true, true);
 				tempBF = partanlzr.getOutputImage();		//temp now holds mask from brightfield image 
 				findParticles(dup.run(intImage, i, i), "Intensity", threshMin, 1, false, false, false);
 				tempInt = ic.run("AND create", tempBF, partanlzr.getOutputImage());		//temp now holds the bf mask AND'ed with the intensity mask
+				
+				//reset ratio to zero at beginning of each analysis for each image
 				ratio=0;
 				if(showMask){
+					//create the bf and intensity mask image stacks
 					bfMaskStack.addSlice("Slice "+i, tempBF.getProcessor());
 					bfMask.setStack("Cell Outlines", bfMaskStack);
 					bfMask.setSlice(i);
@@ -225,40 +257,47 @@ public class Find_Particle_Areas implements PlugInFilter {
 					intMask.setStack("Cell Intensity inside Outlines", intMaskStack);
 					intMask.setSlice(i);
 					intMask.unlock();
-					//at this point, both masks are made and the outline of the cell is the first ROI in the ROI Manager
-					//get the cell's total intensity as a ROI too	
+					
+					//create bf selection and get area of brightfield particles
+					bfAreas = 0;
+					intAreas = 0;
+					IJ.run(bfMask, "Create Selection", null);
+					if(bfMask.getRoi()!=null){
+						rm.addRoi(bfMask.getRoi());
+						rm.runCommand("Measure");
+						areas = rt.getColumn(rt.getColumnIndex("Area"));
+						bfAreas = areas[areas.length-1];
+						bfAreas *= CORRECTIONFACTOR;					//AJEET AND DAVE - to reduce overestimation
+					}
+
+					//create intensity selections and get area of intensity particles
 					IJ.run(intMask, "Create Selection", null);				
-					if(intMask.getRoi()!=null && rm.getCount()!=0){
+					if(intMask.getRoi()!=null && bfAreas != 0){
 						rm.addRoi(intMask.getRoi());
 						rm.runCommand("Measure");
-						//second to last entry in ResultsTable will be of cell's pixel area
-						//last entry in ResultsTable will be of cell's pixel count of total intensity
-
 						areas = rt.getColumn(rt.getColumnIndex("Area"));
-						IJ.log("Slice " + bfImage.getCurrentSlice() + " BRIGHTFIELD area: " + areas[areas.length-2]);
-						IJ.log("Slice " + bfImage.getCurrentSlice() + " INTENSITY area: " + areas[areas.length-1]);
-						ratio = (areas[areas.length-1]/areas[areas.length-2]);
-						//rt.reset();
-						//rm.runCommand("Delete");
+						intAreas = areas[areas.length-1];
+						ratio = intAreas/bfAreas;
 					}
-					if(ratio!=0){
-						IJ.log("Slice " + bfImage.getCurrentSlice() + " RATIO: " + ratio);
-						IJ.log(".");
+									
+					if (ratio!=0){
+						twindow.append(bfImage.getCurrentSlice() + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio);
 					}
 
 				} else intMask=tempInt;
-				//goes through calculation only once if we dont want to analyze the full stack
+				//go through calculation only once if we dont want to analyze the full stack
 				if(!doFullStack) i=bfImage.getStackSize()+1;
-
 			}
-			//bfImage.close();
-			//intImage.close();
+
 			if(showMask){
 				Interpreter.batchMode=false;
 				bfMask.show();
 				intMask.show();
 				Interpreter.batchMode=true;
 			}
+
+			//bfImage.close();
+			//intImage.close();
 			return intMask;
 		}catch (Exception e){
 			IJ.log(e.getMessage());
@@ -274,7 +313,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 		int options = 0;
 		if (excludeOnEdge) options |= ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES;
 		if (addToManager) options |= ParticleAnalyzer.ADD_TO_MANAGER;
-		if (showResults) options |= ParticleAnalyzer.SHOW_RESULTS | ParticleAnalyzer.SHOW_SUMMARY;
+		if (showResults) options |= ParticleAnalyzer.SHOW_RESULTS;
 		options |= ParticleAnalyzer.CLEAR_WORKSHEET;
 		options |= ParticleAnalyzer.SHOW_MASKS;
 
@@ -326,6 +365,8 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 				partanlzr.analyze(imageToAnalyze);
 			} 	
+
+			imageToAnalyze.close();
 
 		}catch(Exception e){
 			IJ.showMessage("Error with finding particles");
@@ -456,6 +497,18 @@ public class Find_Particle_Areas implements PlugInFilter {
 		}
 	}
 
+	//NOTE: calling these methods directly from WiscScan's Java as opposed to through ImageJ for both speed and function
+	// -its more efficient to get in between the processes and get specific values that the process needs instead of
+	// -running IJ.run("Find_Particle_Areas")...
+	/**
+	 * To be used only by WiscScan Java calls, for any mode but ratio or estimate ratio
+	 *
+	 * @param imageToAnalyze ImagePlus image to analyze
+	 * @param isIntensity true if imageToAnalyze is an intensity image
+	 * @param excludeOnEdge ignore particles on the edge of image if true
+	 * @param threshMin	minimum threshold to set, only applies to Intensity images
+	 * @param minSize minimum particle size for detection, only applies to brightfield
+	 */
 	public static float[] inWiscScanMode(ImagePlus imageToAnalyze, boolean isIntensity, boolean excludeOnEdge, double threshMin, int minSize){
 		float[] summedPixelAreasArray;	
 		Interpreter.batchMode=true;
@@ -486,25 +539,19 @@ public class Find_Particle_Areas implements PlugInFilter {
 		return summedPixelAreasArray;
 	}
 
-	//does not work after plugin is done
-	public static float[] getResults(){
-		float[] retVal = new float[4];
-		retVal[0] = average;
-		retVal[1] = median;
-		retVal[2] = min;
-		retVal[3] = max;
-		return retVal;
-	}
-
-	//does not work after plugin is done
-	public static ArrayList<Float> getSliceTable(){
-		return sliceTable;
-	}
-
-	//TODO RatioMode
-	public static boolean ratioModeInWiscScan(ImagePlus bfImage, ImagePlus intImage, double threshMin, int sizeMin, boolean excludeOnEdge, float compareTOLow, float compareTOHigh, int debugSliceNumber){
+	/**
+	 * To be used only by WiscScan Java calls, for only ratio or estimate ratio modes
+	 *
+	 * @param bfImage Brightfield image or image stack to be analyzed
+	 * @param intImage Intensity image or image stack to be analyzed
+	 * @param threshMin Minimum threshold for intensity image, max is set to 255
+	 * @param sizeMin Minimum size limit for particles in brightfield image, max is positive infinity
+	 * @param excludeOnEdge Option to exclude particles on edge of images
+	 * @param CorrectionFactor Factor to multiply brightfield areas with to reduce overestimation
+	 */
+	public static float[] ratioModeInWiscScan(ImagePlus bfImage, ImagePlus intImage, double threshMin, int sizeMin, boolean excludeOnEdge, double CorrectionFactor){
 		//create both masks
-		createRatioMask(bfImage, intImage, threshMin, sizeMin, excludeOnEdge, bfImage.getHeight(), false, false);
+		createRatioMask(bfImage, intImage, threshMin, sizeMin, excludeOnEdge, false, false);
 		float ratio = 0;
 		float[] areas;
 		rt = ResultsTable.getResultsTable();
@@ -512,44 +559,32 @@ public class Find_Particle_Areas implements PlugInFilter {
 		rm = RoiManager.getInstance2();		
 		if(rm==null) rm = new RoiManager();
 
+		float bfAreas = 0;
+		float intAreas = 0;
+		IJ.run(bfMask, "Create Selection", null);
+		if(bfMask.getRoi()!=null){
+			rm.addRoi(bfMask.getRoi());
+			rm.runCommand("Measure");
+			areas = rt.getColumn(rt.getColumnIndex("Area"));
+			bfAreas = areas[areas.length-1];
+			bfAreas *= CorrectionFactor;					//AJEET AND DAVE - to reduce overestimation
+		}
 
-		//at this point, both masks are made and the outline of the cell is the first ROI in the ROI Manager
-		//get the cell's total intensity as a ROI too	
 		IJ.run(intMask, "Create Selection", null);				
-		if(intMask.getRoi()!=null && rm.getCount()!=0){
+		if(intMask.getRoi()!=null && bfAreas != 0){
 			rm.addRoi(intMask.getRoi());
 			rm.runCommand("Measure");
-			//second to last entry in ResultsTable will be of cell's pixel area
-			//last entry in ResultsTable will be of cell's pixel count of total intensity
-
 			areas = rt.getColumn(rt.getColumnIndex("Area"));
-			IJ.log("brightfield area: " + areas[areas.length-2]);
-			IJ.log("intensity area: " + areas[areas.length-1]);
-			ratio = (areas[areas.length-1]/areas[areas.length-2]);
-			//rt.reset();
-			//rm.runCommand("Delete");
+			intAreas = areas[areas.length-1];
+			ratio = intAreas/bfAreas;
 		}
-		IJ.log("Slice " + debugSliceNumber + " has ratio of: " + ratio);
 
-		if(ratio>=compareTOLow && ratio<= compareTOHigh) return true;
+		float[] retVal = new float[3];
+		retVal[0] = bfAreas;
+		retVal[1] = intAreas;
+		retVal[2] = ratio;
 
-		return false;
-	}
-	public static float[] analyzeFullStackInWiscScanMode(ImagePlus imageToAnalyze, String method, double threshMin, int sizeMinimum, boolean excludeEdgeParticles){
-		//private void analyzeFullStack(ImagePlus originalImage, ImagePlus imageToAnalyze, int currentSlice, int fullStackSize, int imageResolution){
-		imageToAnalyze.setSlice(1);
-		analyzeFullStack(null, imageToAnalyze, imageToAnalyze.getCurrentSlice(), imageToAnalyze.getStackSize(), imageToAnalyze.getHeight(), method, threshMin, sizeMinimum, excludeEdgeParticles);
-		ArrayList<Float> temp = getSliceTable();
-		float[] tmp2 = getResults();
-		float[] retVal = new float[tmp2.length + temp.size()];
-
-		retVal[0]=tmp2[0];
-		retVal[1]=tmp2[1];
-		retVal[2]=tmp2[2];
-		retVal[3]=tmp2[3];
-		for(int i=0; i<temp.size(); i++) 
-			retVal[i+4]=temp.get(i);
 		return retVal;
-
 	}
+
 }
