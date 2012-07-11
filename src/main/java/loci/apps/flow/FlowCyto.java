@@ -318,8 +318,8 @@ public class FlowCyto {
 	}
 
 	@SuppressWarnings("static-access")
-	public static void calcTrialRatio(int sizeMin, double thresholdMin, double correctionFactor){
-		IJ.run("Find Particle Areas", "threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" bf="+correctionFactor+" exclude_particles_on_edge " +
+	public static void calcTrialRatio(int sizeMin, double thresholdMin, double CORRECTIONFACTOR){	//, double correctionFactor){ --RESTORE ONCE BIOFORMATS ISSUE IS FIXED; Ajeet
+		IJ.run("Find Particle Areas", "threshold_minimum="+thresholdMin+" size_minimum="+sizeMin+" bf="+CORRECTIONFACTOR+" exclude_particles_on_edge " +
 				"run_plugin_over_entire_stack calculate brightfield=[Brightfield images] intensity=[Intensity Images]");
 	}
 
@@ -333,8 +333,7 @@ public class FlowCyto {
 		Interpreter.batchMode=true;
 
 		try{
-			double CORRECTIONFACTOR = 0.8;			//Ajeet and Dave - to reduce overestimation
-			float[] areas = Find_Particle_Areas.ratioModeInWiscScan(impBF, impIN, thresholdMin, sizeMin, excludeOnEdge, CORRECTIONFACTOR);
+			float[] areas = Find_Particle_Areas.ratioModeInWiscScan(impBF, impIN, thresholdMin, sizeMin, excludeOnEdge);
 			float bfArea = areas[0];
 			float intArea = areas[1];
 			float ratio = areas[2];
