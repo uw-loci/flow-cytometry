@@ -349,11 +349,14 @@ public class FlowCyto {
 			maskBF.show();
 			maskIN.show();
 			
-			float avgIntensity=0;
-			for(int j=(int)thresholdMin;j<meanIntensities.length;j++)
-				avgIntensity+=meanIntensities[j];
-			avgIntensity /= (meanIntensities.length-thresholdMin);
-			float totalIntensity = (float) (avgIntensity*ratio);
+			float intensityPixelCount=0;
+			float totalIntensity=0;
+			for(int j=(int)thresholdMin;j<meanIntensities.length;j++){
+				intensityPixelCount+=meanIntensities[j];
+				totalIntensity+=(j*meanIntensities[j]);
+			}
+			float avgIntensity = totalIntensity/intensityPixelCount;
+			totalIntensity = (float) (avgIntensity*ratio);
 			
 			if(compareUsingMeanIntensity){
 				if(!(totalIntensity>=compareTOLow && totalIntensity<= compareTOHigh)){

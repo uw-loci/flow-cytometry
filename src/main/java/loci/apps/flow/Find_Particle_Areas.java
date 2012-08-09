@@ -301,12 +301,17 @@ public class Find_Particle_Areas implements PlugInFilter {
 						resultsBF.add((float) bfAreas);
 						resultsIN.add((float) intAreas);
 						resultsRATIO.add((float) ratio);
-						float avgIntensity=0;
-						for(int j=(int)thresholdMin;j<meanIntensities.length;j++)
-							avgIntensity+=meanIntensities[j];
-						avgIntensity /= (meanIntensities.length-thresholdMin);
+						
+						float intensityPixelCount=0;
+						float totalIntensity=0;
+						for(int j=(int)thresholdMin;j<meanIntensities.length;j++){
+							intensityPixelCount+=meanIntensities[j];
+							totalIntensity+=(j*meanIntensities[j]);
+						}
+						float avgIntensity = totalIntensity/intensityPixelCount;
 						resultsMeanIN.add(avgIntensity);
 						resultsTotalIN.add((float) (avgIntensity*ratio));
+						
 						twindow.append(i + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + avgIntensity*ratio);
 					} else{
 						particleDetected = false;
