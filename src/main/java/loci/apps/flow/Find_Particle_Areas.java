@@ -481,7 +481,6 @@ public class Find_Particle_Areas implements PlugInFilter {
 			IJ.log("Error encountered while analyzing full stack.");
 			IJ.log(e.getStackTrace().toString());
 		}
-
 	}
 
 	public float[] analyzeIndividualParticles(){
@@ -491,7 +490,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 			ImagePlus duplicateImage = duplicator.run(imp, imp.getCurrentSlice(), imp.getCurrentSlice());
 			if(myMethod.equalsIgnoreCase("intensity")) 
 				findParticles(duplicateImage, true, true);
-			else findParticles(duplicateImage, false, false);
+			else findParticles(duplicateImage, false, true);
 			duplicateImage.close();
 			if (rt.getCounter()>0)
 				IJ.log("Counter: " + rt.getCounter());
