@@ -69,8 +69,12 @@ public class Find_Particle_Areas implements PlugInFilter {
 		imp = image;
 		bfImpOrig = brightfieldImage;
 		intImpOrig = intensityImage;
-		bfImp = bfImpOrig.duplicate();
-		intImp = intImpOrig.duplicate();
+		if(bfImpOrig != null)
+			bfImp = bfImpOrig.duplicate();
+		if(intImpOrig != null)
+			intImp = intImpOrig.duplicate();
+		if(bfImpOrig == null && intImpOrig == null && imp == null)
+			IJ.log("NO IMAGE passed into ImageJ, please restart plugin with images.");
 		myMethod = method;
 		thresholdMin = minThresh;
 		gaussianSigma = sigma;
@@ -88,14 +92,17 @@ public class Find_Particle_Areas implements PlugInFilter {
 	}
 
 	public static void main(String[] args){
+		//For debug
 		new ImageJ();
 		new IJ();
-		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/sampleBf.tif");
-		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/sampleInt.tif");
-		bfImage.show();
+		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
+		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
 		intImage.show();
+		bfImage.show();
+
 		Find_Particle_Areas fpa = new Find_Particle_Areas();
 		fpa.run(null);
+		System.out.println("done without error");
 	}
 
 	/**
@@ -213,6 +220,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 		ImagePlus tempInt = null, tempBF = null, 
 				bfMask = new ImagePlus("Cell Outlines"), intMask = new ImagePlus("Cell Intensity inside Outlines"),
 				duplicatedBF = null, duplicatedInt = null;
+		ImagePlus[] returnImages = new ImagePlus[2];
 		ImageStack intMaskStack = null, bfMaskStack = null;
 		ImageProcessor tempIP;
 		ImageStatistics stats;
@@ -324,16 +332,19 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 				}
 				if(!doFullStack) i = bfImp.getStackSize()+1;
+				returnImages[0] = tempBF;
+				returnImages[1] = tempInt;
+				tempBF.close();
+				tempInt.close();
+				tempBF = null;
+				tempInt = null;
+				
 			}catch(NullPointerException e){
 				IJ.log("Null value encountered in slice " + i);
 			}catch(Throwable e){
 				IJ.log("Error creating accurate mask on slice " + i);
 			}
 		}
-
-		ImagePlus[] returnImages = new ImagePlus[2];
-		returnImages[0] = tempBF;
-		returnImages[1] = tempInt;
 
 		if(inPlugInMode){
 
@@ -385,12 +396,22 @@ public class Find_Particle_Areas implements PlugInFilter {
 				IJ.run(imageToAnalyze, "Find Edges", null);
 				double accuracy = (imageToAnalyze.getProcessor() instanceof ByteProcessor || imageToAnalyze.getProcessor() instanceof ColorProcessor) ?
 						0.002 : 0.0002;
+				if(gb == null) gb = new GaussianBlur();
 				gb.blurGaussian(imageToAnalyze.getProcessor(), gaussianSigma, gaussianSigma, accuracy);
 				imageToAnalyze.getProcessor().setAutoThreshold("Minimum", true, ImageProcessor.BLACK_AND_WHITE_LUT);
+				
+				boolean batchMode = Interpreter.batchMode;
+				Interpreter.batchMode = true;
+				
 				particleAnalyzer.analyze(imageToAnalyze);
 				imageToAnalyze = particleAnalyzer.getOutputImage();
 				//copy and paste below code once more if an underestimation is desired
 				((ByteProcessor)(imageToAnalyze.getProcessor())).erode(1, 0);
+				for(int i = 0; i < rt.getCounter(); i++)
+					rt.deleteRow(i);
+				particleAnalyzer.analyze(imageToAnalyze);
+				imageToAnalyze = particleAnalyzer.getOutputImage();
+				Interpreter.batchMode = batchMode;
 			}
 			return imageToAnalyze;
 		} catch(Throwable e){
@@ -402,6 +423,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 	}
 
 	private void initParticleAnalyzer(boolean intensityImage, boolean showResults){
+		if(rt == null) rt = new ResultsTable();
 		int options = 0;
 		if (excludeOnEdge) options |= ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES;
 		if (showResults) options |= ParticleAnalyzer.SHOW_RESULTS;
@@ -417,11 +439,15 @@ public class Find_Particle_Areas implements PlugInFilter {
 	}
 
 	public void addImageToStack(ImagePlus mainImage, ImageProcessor imageToAdd, ImageStack correspondingStack){
+		try{
 		//very useful to add any single ImagePlus to an existing stack
 		correspondingStack.addSlice("", imageToAdd);
 		mainImage.setStack(correspondingStack);
 		mainImage.setSlice(mainImage.getStackSize());
-		mainImage.unlock();		
+		mainImage.unlock();
+		} catch (Throwable e){
+			IJ.log("error in adding image to stack: " + e);
+		}
 	}
 
 	public void analyzeSingleStack(){
@@ -455,8 +481,12 @@ public class Find_Particle_Areas implements PlugInFilter {
 						twindow.append("Particle(s) found in slice    \t"+ currSlice+ "\t    with a total pixel area of    \t"+area);
 					}
 					currSlice++;
+					currentImage.close();
 				}
+				
 			} else{
+				boolean prevSlicePositive = false;
+				int numParticles = 0, numPositiveSlices = 0, avgParticleArea = 0;
 				while(currSlice <= stackSize){
 					imp.setSlice(currSlice);
 					tempDuplicate = duplicator.run(imp, currSlice, currSlice);
@@ -473,9 +503,17 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 					if(area!=0){
 						twindow.append("Particle(s) found in slice    \t"+ currSlice+ "\t    with a total pixel area of    \t"+area);
-					}
+						avgParticleArea += area;
+						numPositiveSlices++;
+						if (!prevSlicePositive){
+							prevSlicePositive = true;
+							numParticles++;
+						}
+					} else prevSlicePositive = false;
 					currSlice++;
+					currentImage.close();
 				}
+				twindow.append("Total Particle Count:    \t"+ numParticles+ "\t    with a avg pixel area of    \t"+ avgParticleArea/numPositiveSlices);
 			}
 		}catch(Throwable e){
 			IJ.log("Error encountered while analyzing full stack.");
@@ -484,7 +522,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 	}
 
 	public float[] analyzeIndividualParticles(){
-		rt = new ResultsTable();
+//		rt = new ResultsTable();
 		duplicator = new Duplicator();
 		try{
 			ImagePlus duplicateImage = duplicator.run(imp, imp.getCurrentSlice(), imp.getCurrentSlice());
@@ -493,7 +531,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 			else findParticles(duplicateImage, false, true);
 			duplicateImage.close();
 			if (rt.getCounter()>0)
-				IJ.log("Counter: " + rt.getCounter());
+//				IJ.log("Counter: " + rt.getCounter());
 			return rt.getColumn(rt.getColumnIndex("Area"));
 		}catch(Throwable e){
 			IJ.log("Error encountered while analyzing individual particles.");

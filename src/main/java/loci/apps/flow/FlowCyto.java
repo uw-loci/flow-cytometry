@@ -45,19 +45,28 @@ public class FlowCyto {
 	public static void main(String[] args){
 		startImageJ();
 		IJ.log("lol");
-		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-bf.tif");
-		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-int.tif");
+		//ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-bf.tif");
+		//ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-int.tif");
+		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
+		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
+		bfImage.show();
+		intImage.show();
 		IJ.log("haha");
 		duplicator = new Duplicator();
 		init("both", bfImage.getHeight(), bfImage.getWidth(), 0.180028);
-		nSlices++; nSlicesBF++; nSlicesIN++;
-		impBF = duplicator.run(bfImage, 295, 295);
-		impIN = duplicator.run(intImage, 295, 295);
-		impBF.show();
-		impIN.show();
+		nSlicesBF++; nSlicesIN++;
+		for (int i = bfImage.getImageStackSize(); i > 0; i--){
+			nSlices++;
+			impBF = duplicator.run(bfImage, nSlices, nSlices);
+			impIN = duplicator.run(intImage, nSlices, nSlices);
 
-		boolean haha = getRatioBoolean(true, 30, 300, (float) 0.01, 1, 2.2, false);
-		System.out.println("boolean = " + haha);
+			boolean logthis = getRatioBoolean(true, 30, 300, (float) 0.01, 1, 2.2, false);
+			if (logthis) IJ.log("ratio true in slice " + nSlices);
+			bfImage.setSlice(nSlices);
+			intImage.setSlice(nSlices);
+		}
+		//boolean hoho = foundParticle(false, true, 30, 10, 10, 9999, 2.2);
+		System.out.println("done without error");
 	}
 
 	@SuppressWarnings("static-access")
@@ -159,6 +168,7 @@ public class FlowCyto {
 			impBF.setSlice(1);	
 			impBF.unlock();
 
+			twindow = new TextWindow("Brightfield Areas", "Slice \t Status \t Max BF Particle Area", "", 800, 300);
 			bfStack = new ImageStack(width, height, theCM);
 			Interpreter.batchMode=false;
 			impBF.show();
@@ -169,10 +179,11 @@ public class FlowCyto {
 			impIN.unlock();
 
 			intStack.addSlice("Slice "+nSlicesIN, bp);
-			impIN.setStack("Intensity images", bfStack);
+			impIN.setStack("Intensity images", intStack);
 			impIN.setSlice(1);	
 			impIN.unlock();
 
+			twindow = new TextWindow("Intensity Areas", "Slice \t Status \t Total Particle INT Area", "", 800, 300);
 			intStack = new ImageStack(width, height, theCM);
 			Interpreter.batchMode=false;
 			impIN.show();
@@ -285,13 +296,28 @@ public class FlowCyto {
 				for(int i=0; i<summedPixelAreasArray.length; i++)
 					summedPixelAreas += summedPixelAreasArray[i] < ((tempImp.getWidth()*tempImp.getHeight())-100)? summedPixelAreasArray[i]:0;
 					tempImp.close();
-					return (summedPixelAreas >= compareTOLow && summedPixelAreas <= compareTOHigh);
+					if ((summedPixelAreas >= compareTOLow && summedPixelAreas <= compareTOHigh)) {
+						twindow.append(nSlicesIN + "\t" + "COLLECTED (Intensity)" + "\t" + summedPixelAreas);
+						return true;
+					}
+					twindow.append(nSlicesIN + "\t" + " " + "\t" + summedPixelAreas);
+					return false;
 			}
 			tempImp.close();
+			float largest = 0;
+			int largestIndex = 0;
 			for(int i=0; i<summedPixelAreasArray.length; i++){
-				if (summedPixelAreasArray[i] >= compareTOLow && summedPixelAreasArray[i] <= compareTOHigh)
-					return true;
+				if (summedPixelAreasArray[i] > largest){
+					largest = summedPixelAreasArray[i];
+					largestIndex = i+1;
+				}
 			}
+			if ((largest >= compareTOLow && largest <= compareTOHigh)){
+				twindow.append(largestIndex + "\t" + "COLLECTED (Brightfield)" + "\t" + largest);
+				return true;
+			}
+			twindow.append(largestIndex + "\t" + " " + "\t" + largest);
+
 		} catch(Throwable e){
 			IJ.log("Problem with calculating particles");
 			e.printStackTrace();
@@ -348,7 +374,7 @@ public class FlowCyto {
 			Interpreter.batchMode=false;
 			maskBF.show();
 			maskIN.show();
-			
+
 			float intensityPixelCount=0;
 			float totalIntensity=0;
 			for(int j=(int)thresholdMin;j<meanIntensities.length;j++){
@@ -357,7 +383,9 @@ public class FlowCyto {
 			}
 			float avgIntensity = totalIntensity/intensityPixelCount;
 			totalIntensity = (float) (avgIntensity*ratio);
-			
+
+			tempBF.close();
+			tempInt.close();
 			if(compareUsingMeanIntensity){
 				if(!(totalIntensity>=compareTOLow && totalIntensity<= compareTOHigh)){
 					if (ratio!=0)
