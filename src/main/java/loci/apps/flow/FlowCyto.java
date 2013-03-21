@@ -43,27 +43,28 @@ public class FlowCyto {
 
 	@SuppressWarnings("static-access")
 	public static void main(String[] args){
+		//for debug only
 		startImageJ();
 		IJ.log("lol");
 		//ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-bf.tif");
 		//ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-int.tif");
 		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
-		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
+//		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
 		bfImage.show();
-		intImage.show();
+//		intImage.show();
 		IJ.log("haha");
-		duplicator = new Duplicator();
-		init("both", bfImage.getHeight(), bfImage.getWidth(), 0.180028);
-		nSlicesBF++; nSlicesIN++;
+//		duplicator = new Duplicator();
+		init("brightfield", bfImage.getHeight(), bfImage.getWidth(), 0.180028);
+		nSlicesIN++; nSlicesBF++;
 		for (int i = bfImage.getImageStackSize(); i > 0; i--){
 			nSlices++;
 			impBF = duplicator.run(bfImage, nSlices, nSlices);
-			impIN = duplicator.run(intImage, nSlices, nSlices);
+//			impIN = duplicator.run(intImage, nSlices, nSlices);
 
-			boolean logthis = getRatioBoolean(true, 30, 300, (float) 0.01, 1, 2.2, false);
+			boolean logthis = foundParticle(false, true, 30, 100, 100, 400, 2.2); //getRatioBoolean(true, 30, 300, (float) 0.01, 1, 2.2, false);
 			if (logthis) IJ.log("ratio true in slice " + nSlices);
 			bfImage.setSlice(nSlices);
-			intImage.setSlice(nSlices);
+//			intImage.setSlice(nSlices);
 		}
 		//boolean hoho = foundParticle(false, true, 30, 10, 10, 9999, 2.2);
 		System.out.println("done without error");
@@ -168,7 +169,7 @@ public class FlowCyto {
 			impBF.setSlice(1);	
 			impBF.unlock();
 
-			twindow = new TextWindow("Brightfield Areas", "Slice \t Status \t Max BF Particle Area", "", 800, 300);
+			twindow = new TextWindow("Brightfield Areas", "Slice \t Status \t Largest BF Particle's Area", "", 800, 300);
 			bfStack = new ImageStack(width, height, theCM);
 			Interpreter.batchMode=false;
 			impBF.show();
@@ -276,7 +277,8 @@ public class FlowCyto {
 				imp.unlock();
 				nSlices++;
 			}
-
+			bp.reset();
+			bp = null;
 		} catch(Throwable e){
 			IJ.log("Error with showing image");
 			e.printStackTrace();
@@ -288,8 +290,7 @@ public class FlowCyto {
 		try{
 			ImagePlus tempImp = isIntensityImage? duplicator.run(impIN, nSlicesIN, nSlicesIN):duplicator.run(impBF, nSlicesBF, nSlicesBF);
 			String mode = isIntensityImage? "intensity":"brightfield";
-			particleAreas = new Find_Particle_Areas(tempImp, null, null, mode, thresholdMin, gaussianSigma, sizeMin, excludeOnEdge, false);
-			float[] summedPixelAreasArray = particleAreas.analyzeIndividualParticles();
+			float[] summedPixelAreasArray = new Find_Particle_Areas(tempImp, null, null, mode, thresholdMin, gaussianSigma, sizeMin, excludeOnEdge, false).analyzeIndividualParticles();
 			float summedPixelAreas=0;
 
 			if(isIntensityImage) {
@@ -298,6 +299,7 @@ public class FlowCyto {
 					tempImp.close();
 					if ((summedPixelAreas >= compareTOLow && summedPixelAreas <= compareTOHigh)) {
 						twindow.append(nSlicesIN + "\t" + "COLLECTED (Intensity)" + "\t" + summedPixelAreas);
+						summedPixelAreasArray = null;
 						return true;
 					}
 					twindow.append(nSlicesIN + "\t" + " " + "\t" + summedPixelAreas);
@@ -305,19 +307,17 @@ public class FlowCyto {
 			}
 			tempImp.close();
 			float largest = 0;
-			int largestIndex = 0;
 			for(int i=0; i<summedPixelAreasArray.length; i++){
-				if (summedPixelAreasArray[i] > largest){
+				if (summedPixelAreasArray[i] > largest)
 					largest = summedPixelAreasArray[i];
-					largestIndex = i+1;
-				}
 			}
 			if ((largest >= compareTOLow && largest <= compareTOHigh)){
-				twindow.append(largestIndex + "\t" + "COLLECTED (Brightfield)" + "\t" + largest);
+				twindow.append(nSlicesBF + "\t" + "COLLECTED (Brightfield)" + "\t" + largest);
+				summedPixelAreasArray = null;
 				return true;
 			}
-			twindow.append(largestIndex + "\t" + " " + "\t" + largest);
-
+			twindow.append(nSlicesBF + "\t" + " " + "\t" + largest);
+			summedPixelAreasArray = null;
 		} catch(Throwable e){
 			IJ.log("Problem with calculating particles");
 			e.printStackTrace();

@@ -409,6 +409,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 				((ByteProcessor)(imageToAnalyze.getProcessor())).erode(1, 0);
 				for(int i = 0; i < rt.getCounter(); i++)
 					rt.deleteRow(i);
+				rt.reset();
 				particleAnalyzer.analyze(imageToAnalyze);
 				imageToAnalyze = particleAnalyzer.getOutputImage();
 				Interpreter.batchMode = batchMode;
@@ -527,9 +528,10 @@ public class Find_Particle_Areas implements PlugInFilter {
 		try{
 			ImagePlus duplicateImage = duplicator.run(imp, imp.getCurrentSlice(), imp.getCurrentSlice());
 			if(myMethod.equalsIgnoreCase("intensity")) 
-				findParticles(duplicateImage, true, true);
-			else findParticles(duplicateImage, false, true);
+				duplicateImage = findParticles(duplicateImage, true, true);
+			else duplicateImage = findParticles(duplicateImage, false, true);
 			duplicateImage.close();
+			duplicateImage=null;
 			if (rt.getCounter()>0)
 //				IJ.log("Counter: " + rt.getCounter());
 			return rt.getColumn(rt.getColumnIndex("Area"));
