@@ -39,28 +39,18 @@ public class FlowCyto {
 	public static void main(String[] args){
 		//for debug only
 		startImageJ();
-		IJ.log("lol");
-		//ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-bf.tif");
-		//ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-int.tif");
 		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
-//		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
 		bfImage.show();
-//		intImage.show();
-		IJ.log("haha");
-//		duplicator = new Duplicator();
 		init("brightfield", bfImage.getHeight(), bfImage.getWidth(), 0.180028);
 		nSlicesIN++; nSlicesBF++;
 		for (int i = bfImage.getImageStackSize(); i > 0; i--){
 			nSlices++;
 			impBF = duplicator.run(bfImage, nSlices, nSlices);
-//			impIN = duplicator.run(intImage, nSlices, nSlices);
 
-			boolean logthis = foundParticle(false, true, 30, 100, 100, 400, 2.2); //getRatioBoolean(true, 30, 300, (float) 0.01, 1, 2.2, false);
+			boolean logthis = foundParticle(false, true, 30, 100, 100, 400, 2.2);
 			if (logthis) IJ.log("ratio true in slice " + nSlices);
 			bfImage.setSlice(nSlices);
-//			intImage.setSlice(nSlices);
 		}
-		//boolean hoho = foundParticle(false, true, 30, 10, 10, 9999, 2.2);
 		System.out.println("done without error");
 	}
 
@@ -88,8 +78,6 @@ public class FlowCyto {
 			stack = null;
 			bfStack = null;
 			intStack = null;
-			//		bfMaskStack = null;
-			//		intMaskStack = null;
 			tempIP = null;
 			bp = null;
 			theCM = null;
@@ -98,10 +86,6 @@ public class FlowCyto {
 			duplicator = null;
 			tempRoi = null;
 			IJ.log(IJ.freeMemory().toString());
-			//		if(imagej.quitting()){
-			//			IJ.log("I1");
-			//			imagej.quit();
-			//		}
 			IJ.log("J");
 
 

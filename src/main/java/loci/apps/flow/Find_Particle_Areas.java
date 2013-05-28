@@ -520,7 +520,6 @@ public class Find_Particle_Areas implements PlugInFilter {
 	}
 
 	public float[] analyzeIndividualParticles(){
-//		rt = new ResultsTable();
 		duplicator = new Duplicator();
 		try{
 			ImagePlus duplicateImage = duplicator.run(imp, imp.getCurrentSlice(), imp.getCurrentSlice());
@@ -530,8 +529,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 			duplicateImage.close();
 			duplicateImage=null;
 			if (rt.getCounter()>0)
-//				IJ.log("Counter: " + rt.getCounter());
-			return rt.getColumn(rt.getColumnIndex("Area"));
+				return rt.getColumn(rt.getColumnIndex("Area"));
 		}catch(Throwable e){
 			IJ.log("Error encountered while analyzing individual particles.");
 			IJ.log(e.getStackTrace().toString());
