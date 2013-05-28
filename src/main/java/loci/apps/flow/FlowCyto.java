@@ -20,7 +20,6 @@ import java.io.IOException;
 
 public class FlowCyto {
 
-	private static IJ IJ;
 	private static ImagePlus imp, impBF, impIN, maskBF, maskIN, tempBF, tempInt;
 	private static ImageProcessor tempIP;
 	private static ImageStack stack, bfStack, intStack;//, bfMaskStack, intMaskStack;
@@ -35,7 +34,6 @@ public class FlowCyto {
 	private static Find_Particle_Areas particleAreas;
 	private static ThresholdToSelection tts;
 
-	@SuppressWarnings("static-access")
 	public static void main(String[] args){
 		//for debug only
 		startImageJ();
@@ -54,14 +52,11 @@ public class FlowCyto {
 		System.out.println("done without error");
 	}
 
-	@SuppressWarnings("static-access")
 	public static void startImageJ(){
-		IJ = new IJ();
 		new ImageJ();
 		IJ.log(IJ.freeMemory().toString());
 	}
 
-	@SuppressWarnings("static-access")
 	public static void closeAllWindows(){
 		try{
 			IJ.log(IJ.freeMemory().toString());
@@ -90,7 +85,6 @@ public class FlowCyto {
 
 
 			garbageCollect();
-			IJ = null;	
 		} catch(Throwable e){
 			IJ.log("Error closing all windows");
 			IJ.log(e.getMessage().toString());
@@ -214,7 +208,6 @@ public class FlowCyto {
 
 	}
 
-	@SuppressWarnings("static-access")
 	public static void showImage(String mode, int width, int height, byte[] imageData){
 		try{
 			bp = new ByteProcessor(width, height, imageData, theCM);
@@ -258,7 +251,6 @@ public class FlowCyto {
 		}
 	}
 
-	@SuppressWarnings("static-access")
 	public static boolean foundParticle(boolean isIntensityImage, boolean excludeOnEdge, double thresholdMin, int sizeMin, float compareTOLow, float compareTOHigh, double gaussianSigma){
 		try{
 			ImagePlus tempImp = isIntensityImage? duplicator.run(impIN, nSlicesIN, nSlicesIN):duplicator.run(impBF, nSlicesBF, nSlicesBF);
@@ -298,7 +290,6 @@ public class FlowCyto {
 		return false;
 	}
 
-	@SuppressWarnings("static-access")
 	public static boolean getRatioBoolean(boolean excludeOnEdge, double thresholdMin, int sizeMin, float compareTOLow, float compareTOHigh, double gaussianSigma, boolean compareUsingMeanIntensity){
 		try{
 			Interpreter.batchMode=true;
@@ -383,7 +374,6 @@ public class FlowCyto {
 		return false;
 	}
 
-	@SuppressWarnings("static-access")
 	public static void calcTrialRatio(double thresholdMin, int sizeMin, double gaussianSigma){
 		IJ.run("Find Particle Areas", "threshold_minimum="+thresholdMin+
 				" size_minimum="+sizeMin+
