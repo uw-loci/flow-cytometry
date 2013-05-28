@@ -21,11 +21,6 @@
 
 package loci.apps.flow;
 
-import java.awt.image.ColorModel;
-import java.awt.image.IndexColorModel;
-import java.util.ArrayList;
-import java.util.Collections;
-
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -47,6 +42,11 @@ import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.text.TextWindow;
+
+import java.awt.image.ColorModel;
+import java.awt.image.IndexColorModel;
+import java.util.ArrayList;
+import java.util.Collections;
 
 
 public class Find_Particle_Areas implements PlugInFilter {
@@ -214,7 +214,6 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 		double ratio=0, bfAreas=0, intAreas=0;
 		long[] meanIntensities = null;
-		boolean particleDetected = false;
 		boolean prevParticleDetected = false;
 		int numParticlesDetected = 0;
 		ImagePlus tempInt = null, tempBF = null, 
@@ -301,7 +300,6 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 					ratio = bfAreas==0? 0:intAreas/bfAreas;
 					if (ratio!=0){
-						particleDetected = true;
 						if (!prevParticleDetected){
 							numParticlesDetected++;
 							prevParticleDetected=true;
@@ -322,7 +320,6 @@ public class Find_Particle_Areas implements PlugInFilter {
 						
 						twindow.append(i + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + avgIntensity*ratio);
 					} else{
-						particleDetected = false;
 						prevParticleDetected = false; 
 					}
 					Interpreter.batchMode=false;

@@ -1,9 +1,5 @@
 package loci.apps.flow;
 
-import java.awt.image.ColorModel;
-import java.awt.image.IndexColorModel;
-import java.io.IOException;
-
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -11,19 +7,20 @@ import ij.ImageStack;
 import ij.gui.Roi;
 import ij.macro.Interpreter;
 import ij.measure.Measurements;
-import ij.measure.ResultsTable;
 import ij.plugin.Duplicator;
 import ij.plugin.filter.ThresholdToSelection;
-import ij.plugin.frame.RoiManager;
 import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.text.TextWindow;
 
+import java.awt.image.ColorModel;
+import java.awt.image.IndexColorModel;
+import java.io.IOException;
+
 public class FlowCyto {
 
 	private static IJ IJ;
-	private static ImageJ imagej;
 	private static ImagePlus imp, impBF, impIN, maskBF, maskIN, tempBF, tempInt;
 	private static ImageProcessor tempIP;
 	private static ImageStack stack, bfStack, intStack;//, bfMaskStack, intMaskStack;
@@ -31,11 +28,8 @@ public class FlowCyto {
 	private static ByteProcessor bp;
 	private static ColorModel theCM;	
 	private static Duplicator duplicator;
-	private static ResultsTable rt;
-	private static RoiManager rm;
 	private static Roi tempRoi;
 	private static TextWindow twindow;
-	private static double pixelsPerMicronSquared;
 	private static int nSlices, nSlicesBF, nSlicesIN;
 	private static long debugTimeStart;
 	private static Find_Particle_Areas particleAreas;
@@ -73,7 +67,7 @@ public class FlowCyto {
 	@SuppressWarnings("static-access")
 	public static void startImageJ(){
 		IJ = new IJ();
-		imagej = new ImageJ();
+		new ImageJ();
 		IJ.log(IJ.freeMemory().toString());
 	}
 
@@ -91,8 +85,6 @@ public class FlowCyto {
 			if(twindow!=null) twindow.close();
 
 			bp = null;
-			rt = null;
-			rm = null;
 			stack = null;
 			bfStack = null;
 			intStack = null;
@@ -114,7 +106,6 @@ public class FlowCyto {
 
 
 			garbageCollect();
-			imagej = null;
 			IJ = null;	
 		} catch(Throwable e){
 			IJ.log("Error closing all windows");
@@ -214,7 +205,6 @@ public class FlowCyto {
 			maskIN = new ImagePlus("Intensity Particle Masks");
 			tempBF = new ImagePlus();
 			tempInt = new ImagePlus();
-			rt = new ResultsTable();
 			tts = new ThresholdToSelection();
 
 			bfStack = new ImageStack(width, height, theCM);
@@ -238,7 +228,6 @@ public class FlowCyto {
 			imp.show();
 		}
 
-		pixelsPerMicronSquared = pixelsPerMicron>0? pixelsPerMicron:0.180028*0.180028;
 	}
 
 	@SuppressWarnings("static-access")
