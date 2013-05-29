@@ -35,6 +35,12 @@ public class FlowCytoTest {
 		assertFalse(FlowCyto.foundParticle(false, true, 0, 100, 100, 5000, 2.2));
 	}
 
+	@Test
+	public void testRatio() {
+		initImagePair("positive_sample_bf.tif", "positive_sample_int.tif");
+		FlowCyto.calcTrialRatio(0.01, 0, 2.2);
+	}
+
 	private void initImagePair(final String brightfieldFilename, final String intensityFilename) {
 		// we cannot do this in a loop because FlowCyto.init() resets the slice counters
 		final ImagePlus impBF = openImage(brightfieldFilename);
