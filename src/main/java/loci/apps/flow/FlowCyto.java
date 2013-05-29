@@ -20,6 +20,7 @@ import java.io.IOException;
 
 public class FlowCyto {
 
+	private final static boolean noShow = true;
 	private static ImageJ imagej;
 	private static ImagePlus imp, impBF, impIN, maskBF, maskIN, tempBF, tempInt;
 	private static ImageProcessor tempIP;
@@ -54,7 +55,8 @@ public class FlowCyto {
 	}
 
 	public static void startImageJ(){
-		if (imagej == null) imagej = new ImageJ();
+		if (imagej == null) imagej = new ImageJ(noShow ? ImageJ.NO_SHOW : ImageJ.STANDALONE);
+		Interpreter.batchMode = true;
 		IJ.log(IJ.freeMemory().toString());
 	}
 
@@ -143,10 +145,10 @@ public class FlowCyto {
 			impBF.setSlice(1);	
 			impBF.unlock();
 
-			twindow = new TextWindow("Brightfield Areas", "Slice \t Status \t Largest BF Particle's Area", "", 800, 300);
+			twindow = new MyTextWindow("Brightfield Areas", "Slice \t Status \t Largest BF Particle's Area", "", 800, 300);
 			bfStack = new ImageStack(width, height, theCM);
 			Interpreter.batchMode=false;
-			impBF.show();
+			if (!noShow) impBF.show();
 		}
 		else if (mode.equalsIgnoreCase("intensity")){
 			impIN = new ImagePlus("Intensity Images", initBP);
@@ -158,10 +160,10 @@ public class FlowCyto {
 			impIN.setSlice(1);	
 			impIN.unlock();
 
-			twindow = new TextWindow("Intensity Areas", "Slice \t Status \t Total Particle INT Area", "", 800, 300);
+			twindow = new MyTextWindow("Intensity Areas", "Slice \t Status \t Total Particle INT Area", "", 800, 300);
 			intStack = new ImageStack(width, height, theCM);
 			Interpreter.batchMode=false;
-			impIN.show();
+			if (!noShow) impIN.show();
 		}
 		else if (mode.equalsIgnoreCase("both")){
 			impBF = new ImagePlus("Brightfield Images", initBP);
@@ -183,7 +185,7 @@ public class FlowCyto {
 			impIN.setSlice(1);	
 			impIN.unlock();
 
-			twindow = new TextWindow("RATIO of Found Particles", "Slice \t Status \t Brightfield Area \t Intensity Area \t RATIO \t Mean Intensity above Threshold \t Total RATIO", "", 800, 300);
+			twindow = new MyTextWindow("RATIO of Found Particles", "Slice \t Status \t Brightfield Area \t Intensity Area \t RATIO \t Mean Intensity above Threshold \t Total RATIO", "", 800, 300);
 			maskBF = new ImagePlus("Brightfield Particle Masks");
 			maskIN = new ImagePlus("Intensity Particle Masks");
 			tempBF = new ImagePlus();
@@ -193,8 +195,10 @@ public class FlowCyto {
 			bfStack = new ImageStack(width, height, theCM);
 			intStack = new ImageStack(width, height, theCM);
 			Interpreter.batchMode=false;
-			impBF.show();
-			impIN.show();
+			if (!noShow) {
+				impBF.show();
+				impIN.show();
+			}
 		}
 		else {
 			imp = new ImagePlus("Images", initBP);
@@ -208,7 +212,7 @@ public class FlowCyto {
 
 			stack = new ImageStack(width, height, theCM);
 			Interpreter.batchMode=false;
-			imp.show();
+			if (!noShow) imp.show();
 		}
 
 	}
@@ -223,7 +227,7 @@ public class FlowCyto {
 				impBF.setStack("Brightfield Images", bfStack);
 				impBF.setSlice(bfStack.getSize());
 				Interpreter.batchMode=false;
-				impBF.show();
+				if (!noShow) impBF.show();
 				Interpreter.batchMode=true;
 				impBF.unlock();
 				nSlicesBF++;
@@ -233,7 +237,7 @@ public class FlowCyto {
 				impIN.setStack("Intensity Images", intStack);
 				impIN.setSlice(intStack.getSize());
 				Interpreter.batchMode=false;
-				impIN.show();
+				if (!noShow) impIN.show();
 				Interpreter.batchMode=true;
 				impIN.unlock();
 				nSlicesIN++;
@@ -243,7 +247,7 @@ public class FlowCyto {
 				imp.setStack(stack);
 				imp.setSlice(stack.getSize());
 				Interpreter.batchMode=false;
-				imp.show();
+				if (!noShow) imp.show();
 				Interpreter.batchMode=true;
 				imp.unlock();
 				nSlices++;
@@ -341,8 +345,8 @@ public class FlowCyto {
 
 			ratio = (float) (bfAreas==0? 0:intAreas/bfAreas);
 			Interpreter.batchMode=false;
-			maskBF.show();
-			maskIN.show();
+			if (!noShow) maskBF.show();
+			if (!noShow) maskIN.show();
 
 			float intensityPixelCount=0;
 			float totalIntensity=0;
@@ -377,6 +381,27 @@ public class FlowCyto {
 			e.printStackTrace();
 		}
 		return false;
+	}
+
+	private static class MyTextWindow extends TextWindow {
+
+		private static final long serialVersionUID = 1L;
+
+		public MyTextWindow(String title, String headings, String data,
+				int width, int height) {
+			super(title, headings, data, width, height);
+		}
+
+		@Override
+		public void show() {
+			if (!noShow) super.setVisible(true);
+		}
+
+		@Override
+		public void setVisible(final boolean visible) {
+			if (!noShow) super.setVisible(visible);
+		}
+
 	}
 
 	public static void calcTrialRatio(double thresholdMin, int sizeMin, double gaussianSigma){
