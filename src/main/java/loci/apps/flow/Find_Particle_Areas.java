@@ -221,8 +221,10 @@ public class Find_Particle_Areas implements PlugInFilter {
 		boolean prevParticleDetected = false;
 		int numParticlesDetected = 0;
 		ImagePlus tempInt = null, tempBF = null, 
-				bfMask = new ImagePlus("Cell Outlines"), intMask = new ImagePlus("Cell Intensity inside Outlines"),
+				bfMask = new ImagePlus(), intMask = new ImagePlus(),
 				duplicatedBF = null, duplicatedInt = null;
+		bfMask.setTitle("Cell Outlines");
+		intMask.setTitle("Cell Intensity inside Outlines");
 		ImagePlus[] returnImages = new ImagePlus[2];
 		ImageStack intMaskStack = null, bfMaskStack = null;
 		ImageProcessor tempIP;
