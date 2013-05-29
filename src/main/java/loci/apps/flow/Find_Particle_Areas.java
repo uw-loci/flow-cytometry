@@ -91,6 +91,10 @@ public class Find_Particle_Areas implements PlugInFilter {
 		doFullStack = option;
 	}
 
+	public void setPluginMode(boolean pluginMode) {
+		inPlugInMode = pluginMode;
+	}
+
 	public static void main(String[] args){
 		//For debug
 		new ImageJ();

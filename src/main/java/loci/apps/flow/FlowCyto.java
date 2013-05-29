@@ -380,10 +380,9 @@ public class FlowCyto {
 	}
 
 	public static void calcTrialRatio(double thresholdMin, int sizeMin, double gaussianSigma){
-		IJ.run("Find Particle Areas", "threshold_minimum="+thresholdMin+
-				" size_minimum="+sizeMin+
-				" gaussian_sigma="+gaussianSigma+
-				" exclude_particles_on_edge run_plugin_over_entire_stack calculate" +
-				" brightfield=[Brightfield images] intensity=[Intensity Images]");
+		final Find_Particle_Areas finder = new Find_Particle_Areas(imp, impBF, impIN, "Brightfield", thresholdMin, gaussianSigma, sizeMin, true, true);
+		finder.setFullStackOption(true);
+		finder.setPluginMode(true);
+		finder.createRatioMask();
 	}
 }
