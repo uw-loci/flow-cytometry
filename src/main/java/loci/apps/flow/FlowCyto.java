@@ -1,7 +1,6 @@
 package loci.apps.flow;
 
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.Roi;
@@ -21,7 +20,6 @@ import java.io.IOException;
 public class FlowCyto {
 
 	private final static boolean noShow = true;
-	private static ImageJ imagej;
 	private static ImagePlus imp, impBF, impIN, maskBF, maskIN, tempBF, tempInt;
 	private static ImageProcessor tempIP;
 	private static ImageStack stack, bfStack, intStack;//, bfMaskStack, intMaskStack;
@@ -55,13 +53,10 @@ public class FlowCyto {
 	}
 
 	public static void startImageJ(){
-		if (imagej == null) imagej = new ImageJ(noShow ? ImageJ.NO_SHOW : ImageJ.STANDALONE);
-		Interpreter.batchMode = true;
 		IJ.log(IJ.freeMemory().toString());
 	}
 
 	public static void closeAllWindows(){
-		if (imagej == null) return;
 		try{
 			IJ.log(IJ.freeMemory().toString());
 			if(imp!=null) imp.close();
@@ -72,9 +67,6 @@ public class FlowCyto {
 			if(tempBF!=null) tempBF.close();
 			if(tempInt!=null) tempInt.close();
 			if(twindow!=null) twindow.close();
-
-			imagej.dispose();
-			imagej = null;
 
 			bp = null;
 			stack = null;
