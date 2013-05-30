@@ -25,6 +25,7 @@ import java.io.IOException;
 public class FlowCyto {
 
 	private final static boolean noShow = true;
+	private static ImageJ ij;
 	private static ImagePlus imp, impBF, impIN, maskBF, maskIN, tempBF, tempInt;
 	private static ImageProcessor tempIP;
 	private static ImageStack stack, bfStack, intStack;//, bfMaskStack, intMaskStack;
@@ -34,6 +35,7 @@ public class FlowCyto {
 	private static Duplicator duplicator;
 	private static Roi tempRoi;
 	private static TextWindow twindow;
+	private static GenericTable spreadsheet;
 	private static int nSlices, nSlicesBF, nSlicesIN;
 	private static long debugTimeStart;
 	private static Find_Particle_Areas particleAreas;
@@ -41,25 +43,17 @@ public class FlowCyto {
 
 	public static void main(String[] args){
 		// create an ImageJ application context with the necessary services
-		final ImageJ ij = new ImageJ(DisplayService.class, UIService.class);
+		ij = new ImageJ(DisplayService.class, UIService.class);
 
-		int colCount = 5, rowCount = 6;
-		// create a spreadsheet
-		final GenericTable spreadsheet = new DefaultGenericTable(colCount, rowCount);
-		for (int col = 0; col < colCount; col++) {
-			final char letter = (char) ('A' + col);
-			spreadsheet.setColumnHeader(col, "" + letter);
-			for (int row = 0; row < rowCount; row++) {
-				final String data = "" + letter + (row + 1);
-				spreadsheet.set(col, row, data);
-			}
-		}
-
-		// display the spreadsheet
-		ij.ui().show("Spreadsheet", spreadsheet);
+		initializeSpreadsheet("Hello", "Alpha", "Beta", "Gamma");
+		appendRow("First", 3, true);
+		appendRow("Second", 2, true);
+		appendRow("Fourth", 1, !true);
 	}
 
 	public static void startImageJ(){
+		if (ij != null) return;
+		ij = new ImageJ(DisplayService.class, UIService.class);
 		IJ.log(IJ.freeMemory().toString());
 	}
 
@@ -73,7 +67,11 @@ public class FlowCyto {
 			if(maskIN!=null) maskIN.close();
 			if(tempBF!=null) tempBF.close();
 			if(tempInt!=null) tempInt.close();
-			if(twindow!=null) twindow.close();
+
+			if (ij != null) {
+				ij.getContext().dispose();
+				ij = null;
+			}
 
 			bp = null;
 			stack = null;
@@ -401,6 +399,23 @@ public class FlowCyto {
 			if (!noShow) super.setVisible(visible);
 		}
 
+	}
+
+	protected static void initializeSpreadsheet(final String title, final String... headers) {
+		spreadsheet = new DefaultGenericTable();
+		spreadsheet.appendColumns(headers);
+		if (!noShow) {
+			startImageJ();
+			ij.ui().show(title, spreadsheet);
+		}
+	}
+
+	protected static void appendRow(final Object... values) {
+		final int row = spreadsheet.getRowCount();
+		spreadsheet.appendRow();
+		for (int i = 0; i < values.length; i++) {
+			spreadsheet.set(i, row, values[i]);
+		}
 	}
 
 	public static void calcTrialRatio(double thresholdMin, int sizeMin, double gaussianSigma){
