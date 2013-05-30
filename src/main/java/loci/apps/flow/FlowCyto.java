@@ -11,7 +11,6 @@ import ij.plugin.filter.ThresholdToSelection;
 import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
-import ij.text.TextWindow;
 import imagej.ImageJ;
 import imagej.data.table.DefaultGenericTable;
 import imagej.data.table.GenericTable;
@@ -34,7 +33,6 @@ public class FlowCyto {
 	private static ColorModel theCM;	
 	private static Duplicator duplicator;
 	private static Roi tempRoi;
-	private static TextWindow twindow;
 	private static GenericTable spreadsheet;
 	private static int nSlices, nSlicesBF, nSlicesIN;
 	private static long debugTimeStart;
@@ -142,7 +140,7 @@ public class FlowCyto {
 			impBF.setSlice(1);	
 			impBF.unlock();
 
-			twindow = new MyTextWindow("Brightfield Areas", "Slice \t Status \t Largest BF Particle's Area", "", 800, 300);
+			initializeSpreadsheet("Brightfield Areas", "Slice", "Status", "Largest BF Particle's Area");
 			bfStack = new ImageStack(width, height, theCM);
 			Interpreter.batchMode=false;
 			if (!noShow) impBF.show();
@@ -157,7 +155,7 @@ public class FlowCyto {
 			impIN.setSlice(1);	
 			impIN.unlock();
 
-			twindow = new MyTextWindow("Intensity Areas", "Slice \t Status \t Total Particle INT Area", "", 800, 300);
+			initializeSpreadsheet("Intensity Areas", "Slice", "Status", "Total Particle INT Area");
 			intStack = new ImageStack(width, height, theCM);
 			Interpreter.batchMode=false;
 			if (!noShow) impIN.show();
@@ -182,7 +180,7 @@ public class FlowCyto {
 			impIN.setSlice(1);	
 			impIN.unlock();
 
-			twindow = new MyTextWindow("RATIO of Found Particles", "Slice \t Status \t Brightfield Area \t Intensity Area \t RATIO \t Mean Intensity above Threshold \t Total RATIO", "", 800, 300);
+			initializeSpreadsheet("RATIO of Found Particles", "Slice", "Status", "Brightfield Area", "Intensity Area", "RATIO", "Mean Intensity above Threshold", "Total RATIO");
 			maskBF = new ImagePlus("Brightfield Particle Masks");
 			maskIN = new ImagePlus("Intensity Particle Masks");
 			tempBF = new ImagePlus();
@@ -269,11 +267,11 @@ public class FlowCyto {
 					summedPixelAreas += summedPixelAreasArray[i] < ((tempImp.getWidth()*tempImp.getHeight())-100)? summedPixelAreasArray[i]:0;
 					tempImp.close();
 					if ((summedPixelAreas >= compareTOLow && summedPixelAreas <= compareTOHigh)) {
-						twindow.append(nSlicesIN + "\t" + "COLLECTED (Intensity)" + "\t" + summedPixelAreas);
+						appendRow(nSlicesIN, "COLLECTED (Intensity)", summedPixelAreas);
 						summedPixelAreasArray = null;
 						return true;
 					}
-					twindow.append(nSlicesIN + "\t" + " " + "\t" + summedPixelAreas);
+					appendRow(nSlicesIN, "", summedPixelAreas);
 					return false;
 			}
 			tempImp.close();
@@ -283,11 +281,11 @@ public class FlowCyto {
 					largest = summedPixelAreasArray[i];
 			}
 			if ((largest >= compareTOLow && largest <= compareTOHigh)){
-				twindow.append(nSlicesBF + "\t" + "COLLECTED (Brightfield)" + "\t" + largest);
+				appendRow(nSlicesBF, "COLLECTED (Brightfield)", largest);
 				summedPixelAreasArray = null;
 				return true;
 			}
-			twindow.append(nSlicesBF + "\t" + " " + "\t" + largest);
+			appendRow(nSlicesBF, "", largest);
 			summedPixelAreasArray = null;
 		} catch(Throwable e){
 			IJ.log("Problem with calculating particles");
@@ -358,18 +356,20 @@ public class FlowCyto {
 			tempInt.close();
 			if(compareUsingMeanIntensity){
 				if(!(totalIntensity>=compareTOLow && totalIntensity<= compareTOHigh)){
-					if (ratio!=0)
-						twindow.append(nSlicesBF + "\t" + " " + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + totalIntensity);
+					if (ratio!=0) {
+						appendRow(nSlicesBF, "", bfAreas, intAreas, ratio, avgIntensity, totalIntensity);
+					}
 				}else{
-					twindow.append(nSlicesBF + "\t" + "COLLECTED (TOTAL Ratio)" + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + totalIntensity);
+					appendRow(nSlicesBF, "COLLECTED (TOTAL Ratio)", bfAreas, intAreas, ratio, avgIntensity, totalIntensity);
 					return true;
 				}
 			} else{
 				if(!(ratio>=compareTOLow && ratio<= compareTOHigh)){
-					if (ratio!=0)
-						twindow.append(nSlicesBF + "\t" + " " + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + totalIntensity);
+					if (ratio!=0) {
+						appendRow(nSlicesBF, "", bfAreas, intAreas, ratio, avgIntensity, totalIntensity);
+					}
 				}else{
-					twindow.append(nSlicesBF + "\t" + "COLLECTED (RATIO)" + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + totalIntensity);
+					appendRow(nSlicesBF, "COLLECTED (RATIO)", bfAreas, intAreas, ratio, avgIntensity, totalIntensity);
 					return true;
 				}
 			}
@@ -378,27 +378,6 @@ public class FlowCyto {
 			e.printStackTrace();
 		}
 		return false;
-	}
-
-	private static class MyTextWindow extends TextWindow {
-
-		private static final long serialVersionUID = 1L;
-
-		public MyTextWindow(String title, String headings, String data,
-				int width, int height) {
-			super(title, headings, data, width, height);
-		}
-
-		@Override
-		public void show() {
-			if (!noShow) super.setVisible(true);
-		}
-
-		@Override
-		public void setVisible(final boolean visible) {
-			if (!noShow) super.setVisible(visible);
-		}
-
 	}
 
 	protected static void initializeSpreadsheet(final String title, final String... headers) {

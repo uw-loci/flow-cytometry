@@ -41,7 +41,6 @@ import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
-import ij.text.TextWindow;
 
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
@@ -56,7 +55,6 @@ public class Find_Particle_Areas implements PlugInFilter {
 	private boolean excludeOnEdge, checkIndividualParticles, doFullStack, multipleImagesAvail, doRatio, inPlugInMode;
 	private int sizeMin, currSlice, stackSize;
 	private Duplicator duplicator;
-	private TextWindow twindow;
 	private ParticleAnalyzer particleAnalyzer;
 	private ResultsTable rt;
 	private ImageCalculator ic;
@@ -242,7 +240,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 		//only needed if this method is executed through ImageJ
 		if(inPlugInMode){
-			twindow = new TextWindow("RATIO of Found Particles", "Slice \t Brightfield Area \t Intensity Area \t RATIO \t Mean Intensity above Threshold \t Total Intensity", "", 800, 300);
+			FlowCyto.initializeSpreadsheet("RATIO of Found Particles", "Slice", "Brightfield Area", "Intensity Area", "RATIO", "Mean Intensity above Threshold", "Total Intensity");
 			byte[] r = new byte[256];
 			for(int ii=0 ; ii<256 ; ii++)
 				r[ii]=(byte)ii;
@@ -324,7 +322,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 						resultsMeanIN.add(avgIntensity);
 						resultsTotalIN.add((float) (avgIntensity*ratio));
 						
-						twindow.append(i + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + avgIntensity*ratio);
+						FlowCyto.appendRow(i, bfAreas, intAreas, ratio, avgIntensity, avgIntensity*ratio);
 					} else{
 						prevParticleDetected = false; 
 					}
@@ -368,11 +366,11 @@ public class Find_Particle_Areas implements PlugInFilter {
 			float sumTotalIn = 0;
 			for (float s : resultsTotalIN) sumTotalIn += s;
 
-			twindow.append("Avg" + "\t" + sumBF/resultsBF.size() + "\t" + sumIN/resultsIN.size() + "\t" + sumRatio/resultsRATIO.size() + "\t" + sumMeanIn/resultsMeanIN.size() + "\t" + sumTotalIn/resultsTotalIN.size());
-			twindow.append("Min" + "\t" + resultsBF.get(0) + "\t" + resultsIN.get(0) + "\t" + resultsRATIO.get(0) + "\t" + resultsMeanIN.get(0) + "\t" + resultsTotalIN.get(0));
-			twindow.append("Max" + "\t" + resultsBF.get(resultsBF.size()-1) + "\t" + resultsIN.get(resultsIN.size()-1) + "\t" + resultsRATIO.get(resultsRATIO.size()-1) + "\t" + resultsMeanIN.get(resultsMeanIN.size()-1) + "\t" + resultsTotalIN.get(resultsTotalIN.size()-1));
-			twindow.append("Med" + "\t" + resultsBF.get(resultsBF.size()/2) + "\t" + resultsIN.get(resultsIN.size()/2) + "\t" + resultsRATIO.get(resultsRATIO.size()/2) + "\t" + resultsMeanIN.get(resultsMeanIN.size()/2) + "\t" + resultsTotalIN.get(resultsTotalIN.size()/2));
-			twindow.append("Total Particle count: " + numParticlesDetected);
+			FlowCyto.appendRow("Avg", sumBF/resultsBF.size(), sumIN/resultsIN.size(), sumRatio/resultsRATIO.size(), sumMeanIn/resultsMeanIN.size(), sumTotalIn/resultsTotalIN.size());
+			FlowCyto.appendRow("Min", resultsBF.get(0), resultsIN.get(0), resultsRATIO.get(0), resultsMeanIN.get(0), resultsTotalIN.get(0));
+			FlowCyto.appendRow("Max", resultsBF.get(resultsBF.size()-1), resultsIN.get(resultsIN.size()-1), resultsRATIO.get(resultsRATIO.size()-1), resultsMeanIN.get(resultsMeanIN.size()-1), resultsTotalIN.get(resultsTotalIN.size()-1));
+			FlowCyto.appendRow("Med", resultsBF.get(resultsBF.size()/2), resultsIN.get(resultsIN.size()/2), resultsRATIO.get(resultsRATIO.size()/2), resultsMeanIN.get(resultsMeanIN.size()/2), resultsTotalIN.get(resultsTotalIN.size()/2));
+			FlowCyto.appendRow("Total Particle count: " + numParticlesDetected);
 		}
 		else Interpreter.batchMode=false;
 		intMaskStack=null;
@@ -455,7 +453,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 	}
 
 	public void analyzeSingleStack(){
-		twindow = new TextWindow("Found Particles", " \t Slice \t \tPixel Area", "", 800, 300);
+		FlowCyto.initializeSpreadsheet("Found Particles", "", "Slice", "", "Pixel Area");
 		duplicator = new Duplicator();
 		ImagePlus currentImage, tempDuplicate;
 		ImageProcessor tempIP;
@@ -482,7 +480,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 					}
 
 					if(area!=0){
-						twindow.append("Particle(s) found in slice    \t"+ currSlice+ "\t    with a total pixel area of    \t"+area);
+						FlowCyto.appendRow("Particle(s) found in slice", currSlice, "with a total pixel area of", area);
 					}
 					currSlice++;
 					currentImage.close();
@@ -506,7 +504,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 					}
 
 					if(area!=0){
-						twindow.append("Particle(s) found in slice    \t"+ currSlice+ "\t    with a total pixel area of    \t"+area);
+						FlowCyto.appendRow("Particle(s) found in slice", currSlice, "with a total pixel area of ", area);
 						avgParticleArea += area;
 						numPositiveSlices++;
 						if (!prevSlicePositive){
@@ -517,7 +515,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 					currSlice++;
 					currentImage.close();
 				}
-				twindow.append("Total Particle Count:    \t"+ numParticles+ "\t    with a avg pixel area of    \t"+ avgParticleArea/numPositiveSlices);
+				FlowCyto.appendRow("Total Particle Count:", numParticles, "with a avg pixel area of", avgParticleArea/numPositiveSlices);
 			}
 		}catch(Throwable e){
 			IJ.log("Error encountered while analyzing full stack.");
