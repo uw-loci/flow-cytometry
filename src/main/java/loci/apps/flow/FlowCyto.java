@@ -99,7 +99,7 @@ public class FlowCyto {
 
 	public static void openFile(String filename, double pixelsPerMicron) throws IOException{
 		startImageJ();
-		ij.IJ.run("Bio-Formats Importer", "open=["+filename+"] autoscale color_mode=Default view=Hyperstack stack_order=XYCZT");
+		IJ.run("Bio-Formats Importer", "open=["+filename+"] autoscale color_mode=Default view=Hyperstack stack_order=XYCZT");
 	}
 
 	public static void garbageCollect(){
@@ -107,16 +107,16 @@ public class FlowCyto {
 	}
 
 	public static void logInImageJ(String message){
-		ij.IJ.log(message);
+		IJ.log(message);
 	}
 
 	public static void createDebugTimeStartPoint(String message){
 		debugTimeStart=System.nanoTime();
-		ij.IJ.log(message+" --START noted at \t \t \t"+ (debugTimeStart/1000000) +"ms");
+		IJ.log(message+" --START noted at \t \t \t"+ (debugTimeStart/1000000) +"ms");
 	}
 
 	public static void createDebugTimeCheckPoint(String message){
-		ij.IJ.log(message+" --CHECKPOINT noted at \t \t \t"+ ((System.nanoTime() - debugTimeStart)/1000000) +"ms");
+		IJ.log(message+" --CHECKPOINT noted at \t \t \t"+ ((System.nanoTime() - debugTimeStart)/1000000) +"ms");
 	}
 
 	public static void init(String mode, int width, int height, double pixelsPerMicron){
