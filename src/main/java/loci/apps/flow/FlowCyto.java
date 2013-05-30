@@ -12,6 +12,11 @@ import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.text.TextWindow;
+import imagej.ImageJ;
+import imagej.data.table.DefaultGenericTable;
+import imagej.data.table.GenericTable;
+import imagej.display.DisplayService;
+import imagej.ui.UIService;
 
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
@@ -35,21 +40,23 @@ public class FlowCyto {
 	private static ThresholdToSelection tts;
 
 	public static void main(String[] args){
-		//for debug only
-		startImageJ();
-		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
-		bfImage.show();
-		init("brightfield", bfImage.getHeight(), bfImage.getWidth(), 0.180028);
-		nSlicesIN++; nSlicesBF++;
-		for (int i = bfImage.getImageStackSize(); i > 0; i--){
-			nSlices++;
-			impBF = duplicator.run(bfImage, nSlices, nSlices);
+		// create an ImageJ application context with the necessary services
+		final ImageJ ij = new ImageJ(DisplayService.class, UIService.class);
 
-			boolean logthis = foundParticle(false, true, 30, 100, 100, 400, 2.2);
-			if (logthis) IJ.log("ratio true in slice " + nSlices);
-			bfImage.setSlice(nSlices);
+		int colCount = 5, rowCount = 6;
+		// create a spreadsheet
+		final GenericTable spreadsheet = new DefaultGenericTable(colCount, rowCount);
+		for (int col = 0; col < colCount; col++) {
+			final char letter = (char) ('A' + col);
+			spreadsheet.setColumnHeader(col, "" + letter);
+			for (int row = 0; row < rowCount; row++) {
+				final String data = "" + letter + (row + 1);
+				spreadsheet.set(col, row, data);
+			}
 		}
-		System.out.println("done without error");
+
+		// display the spreadsheet
+		ij.ui().show("Spreadsheet", spreadsheet);
 	}
 
 	public static void startImageJ(){
