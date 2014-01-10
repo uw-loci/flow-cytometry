@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>loci</groupId>
 		<artifactId>pom-loci</artifactId>
-		<version>1.0</version>
+		<version>1.13</version>
 	</parent>
 
 	<artifactId>flow-cytometry</artifactId>
@@ -28,19 +28,19 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>${scifio.groupId}</groupId>
+			<groupId>${bio-formats.groupId}</groupId>
 			<artifactId>bio-formats</artifactId>
-			<version>${scifio.version}</version>
+			<version>${bio-formats.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>${scifio.groupId}</groupId>
+			<groupId>${bio-formats.groupId}</groupId>
 			<artifactId>loci-common</artifactId>
-			<version>${scifio.version}</version>
+			<version>${bio-formats.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>${scifio.groupId}</groupId>
+			<groupId>${bio-formats.groupId}</groupId>
 			<artifactId>ome-xml</artifactId>
-			<version>${scifio.version}</version>
+			<version>${bio-formats.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>${imagej.groupId}</groupId>
