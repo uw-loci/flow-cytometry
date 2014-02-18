@@ -23,8 +23,8 @@ public:
 	CMPFC_Controller(void);
 	// TODO: add your methods here.
 	bool OnFlush(int intervalInMilliSec);
-	bool OpenLine(int lineNum);
-	bool CloseLine(int lineNum);
+	bool OpenLine(int deviceNum, int portNum, int lineNum);
+	bool CloseLine(int deviceNum, int portNum, int lineNum);
 };
 
 extern MPFC_CONTROLLER_API int openVal;
@@ -32,9 +32,8 @@ extern MPFC_CONTROLLER_API int closedVal;
 
 //MPFC_CONTROLLER_API int fnMPFC_Controller(void);
 MPFC_CONTROLLER_API bool OnFlush(int intervalInMilliSec);
-MPFC_CONTROLLER_API bool OpenLine(int lineNum);
-MPFC_CONTROLLER_API bool CloseLine(int lineNum);
-
+MPFC_CONTROLLER_API bool OpenLine(int deviceNum, int portNum, int lineNum);
+MPFC_CONTROLLER_API bool CloseLine(int deviceNum, int portNum, int lineNum);
 
 #ifdef __cplusplus
 	}

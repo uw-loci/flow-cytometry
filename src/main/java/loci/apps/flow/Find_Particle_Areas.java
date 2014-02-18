@@ -30,8 +30,6 @@
 
 package loci.apps.flow;
 
-import com.sun.jna.*;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -92,8 +90,8 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 	public interface MPFC_Ctrl extends Library{
 		public boolean OnFlush(int intervalInMilliSec);
-		public boolean OpenLine(int lineNum);
-		public boolean CloseLine(int lineNum);
+		public boolean OpenLine(int deviceNum, int portNum, int lineNum);
+		public boolean CloseLine(int deviceNum, int portNum, int lineNum);
 
 	}
 
@@ -130,16 +128,19 @@ public class Find_Particle_Areas implements PlugInFilter {
 //		new IJ();
 //		System.out.println(System.getProperty("java.library.path"));
 //		System.out.println(Find_Particle_Areas.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+		
+		int deviceNum = 1, portNum = 0;
+		
 		System.loadLibrary("MPFC_Controller");
 		MPFC_Ctrl DAQ = (MPFC_Ctrl) Native.loadLibrary("MPFC_Controller",MPFC_Ctrl.class);
+		//DAQ.OnFlush(3000);
+		DAQ.OpenLine(deviceNum, portNum, 3);
+		DAQ.CloseLine(deviceNum, portNum, 3);
+		DAQ.OpenLine(deviceNum, portNum, 4);
+		DAQ.OpenLine(deviceNum, portNum, 3);
+		DAQ.CloseLine(deviceNum, portNum, 3);
+		DAQ.CloseLine(deviceNum, portNum, 4);
 		DAQ.OnFlush(3000);
-		DAQ.OpenLine(3);
-		DAQ.CloseLine(3);
-		DAQ.OpenLine(4);
-		DAQ.OpenLine(3);
-		DAQ.CloseLine(3);
-		DAQ.CloseLine(4);
-		DAQ.OnFlush(10000);
 
 //
 //		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");

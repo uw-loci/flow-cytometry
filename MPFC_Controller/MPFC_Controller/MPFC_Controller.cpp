@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "MPFC_Controller.h"
 #include <stdio.h>
+#include <string>
 
 // This is an example of an exported variable
 MPFC_CONTROLLER_API int openVal=1;
@@ -112,17 +113,26 @@ MPFC_CONTROLLER_API bool OnFlush(int intervalInMilliSec)
 	return false;
 }
 
-MPFC_CONTROLLER_API bool OpenLine(int lineNum)
+std::string populatePortInfo(int deviceNum, int portNum, int lineNum)
+{
+	std::string portInfo = "Dev";
+	portInfo.append(std::to_string(deviceNum));
+	portInfo.append("/port");
+	portInfo.append(std::to_string(portNum));
+	portInfo.append("/line");
+	portInfo.append(std::to_string(lineNum));
+	return portInfo;
+}
+
+MPFC_CONTROLLER_API bool OpenLine(int deviceNum, int portNum, int lineNum)
 {
 	TaskHandle tmpHandle = 0;
 	int32 retval = 0;
-	char portLine[32] = "Dev1/port0/line";
-	char temp[32];
-	sprintf_s(temp, "%i", lineNum);
-	strcat_s(portLine, temp);
+
+	std::string portInfo = populatePortInfo(deviceNum, portNum, lineNum);
 	
 	retval += DAQmxCreateTask("",&tmpHandle);
-	retval += DAQmxCreateDOChan(tmpHandle,portLine,"",DAQmx_Val_ChanForAllLines);
+	retval += DAQmxCreateDOChan(tmpHandle,portInfo.c_str(),"",DAQmx_Val_ChanForAllLines);
 	retval += DAQmxStartTask(tmpHandle);
 
 	uInt8 dataOPEN[1];
@@ -139,17 +149,15 @@ MPFC_CONTROLLER_API bool OpenLine(int lineNum)
 	return false;
 }
 
-MPFC_CONTROLLER_API bool CloseLine(int lineNum)
+MPFC_CONTROLLER_API bool CloseLine(int deviceNum, int portNum, int lineNum)
 {
 	TaskHandle tmpHandle = 0;
 	int32 retval = 0;
-	char portLine[32] = "Dev1/port0/line";
-	char temp[32];
-	sprintf_s(temp, "%i", lineNum);
-	strcat_s(portLine, temp);
+
+	std::string portInfo = populatePortInfo(deviceNum, portNum, lineNum);
 	
 	retval += DAQmxCreateTask("",&tmpHandle);
-	retval += DAQmxCreateDOChan(tmpHandle,portLine,"",DAQmx_Val_ChanForAllLines);
+	retval += DAQmxCreateDOChan(tmpHandle,portInfo.c_str(),"",DAQmx_Val_ChanForAllLines);
 	retval += DAQmxStartTask(tmpHandle);
 
 	uInt8 dataCLOSED[1];
