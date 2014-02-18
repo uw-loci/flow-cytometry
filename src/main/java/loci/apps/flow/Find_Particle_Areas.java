@@ -1,22 +1,31 @@
-///////////////////////////////////////////////////////////////////////////////
-// Title:            Find_Particle_Areas
-// Description:		 ImageJ plugin to isolate cell particles in images and image
-//					 stacks. Intended to be used in realtime and offline analysis
-//					 of flow cytometry experiments. 
-//
-// 					 Three main functions: determining sum pixel area of cell or
-//					 particle in brightfield images, determining sum pixel 
-//					 intensity count in intensity images, and calculating ratio
-//					 of particle intensity per particle area.
-//
-// Author:           Ajeetesh Vivekanandan, UW-Madison LOCI
-// Contact:			 ajeet.vivekanandan@gmail.com
-// Web:				 loci.wisc.edu
-//
-///////////////////////////////////////////////////////////////////////////////
-/**
- * @author Ajeet Vivekanandan 
- * @author UW-Madison LOCI
+/*
+ * #%L
+ * Server application for flow cytometry with WiscScan.
+ * %%
+ * Copyright (C) 2008 - 2014 Board of Regents of the University of
+ * Wisconsin-Madison.
+ * %%
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ * #L%
  */
 
 package loci.apps.flow;
@@ -50,7 +59,19 @@ import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.text.TextWindow;
 
-
+/**
+ * ImageJ plugin to isolate cell particles in images and image
+ * stacks. Intended to be used in realtime and offline analysis
+ * of flow cytometry experiments. 
+ * <p>
+ * Three main functions: determining sum pixel area of cell or
+ * particle in brightfield images, determining sum pixel 
+ * intensity count in intensity images, and calculating ratio
+ * of particle intensity per particle area.
+ * </p>
+ * 
+ * @author Ajeetesh Vivekanandan
+ */
 public class Find_Particle_Areas implements PlugInFilter {
 	private ImagePlus imp, bfImpOrig, intImpOrig, bfImp, intImp;
 	private String myMethod;
@@ -554,19 +575,4 @@ public class Find_Particle_Areas implements PlugInFilter {
 		}
 		return new float[1];
 	}
-	
-	public void testhardware(){
-		
-		int debugVal = 0;
-		//FCHWCtrl INSTANCE = (FCHWCtrl) Native.loadLibrary("FCHWCtrl", FCHWCtrl.class);
-		System.setProperty("jna.library.path", "C:\\Users\\Ajeet\\LOCI\\WiscScan Java\\flow-cytometry\\target\\classes");
-		System.setProperty("java.library.path", "C:\\Users\\Ajeet\\LOCI\\WiscScan Java\\flow-cytometry\\target\\classes");
-		FCHWCtrl fcHardware = (FCHWCtrl) Native.loadLibrary("FCHWCtrl.dll", FCHWCtrl.class);
-		fcHardware.DACinitLines();
-		debugVal = fcHardware.DACopenLine(4);
-		debugVal = fcHardware.DACstartLine(4);
-		debugVal = fcHardware.DACstopLine(4);
-		debugVal = fcHardware.DACcloseLine(4);
-	}
-	
 }
