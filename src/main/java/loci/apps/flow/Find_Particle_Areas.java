@@ -26,6 +26,8 @@ import java.awt.image.IndexColorModel;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import com.sun.jna.*;
+
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -65,6 +67,17 @@ public class Find_Particle_Areas implements PlugInFilter {
 	public Find_Particle_Areas(){
 	}
 
+	
+	//allows control of hardware through native library
+	public interface FCHWCtrl extends Library {
+		int DACinitLines();
+		int DACopenLine(int lineNum);
+		int DACstartLine(int lineNum);
+		int DACstopLine(int lineNum);
+		int DACcloseLine(int lineNum);
+		int DACcloseAllLines();
+	}
+	
 	public Find_Particle_Areas(ImagePlus image, ImagePlus brightfieldImage, ImagePlus intensityImage, String method, double minThresh, double sigma, int minSize, boolean excludeEdge, boolean ratioMode){
 		imp = image;
 		bfImpOrig = brightfieldImage;
@@ -541,4 +554,19 @@ public class Find_Particle_Areas implements PlugInFilter {
 		}
 		return new float[1];
 	}
+	
+	public void testhardware(){
+		
+		int debugVal = 0;
+		//FCHWCtrl INSTANCE = (FCHWCtrl) Native.loadLibrary("FCHWCtrl", FCHWCtrl.class);
+		System.setProperty("jna.library.path", "C:\\Users\\Ajeet\\LOCI\\WiscScan Java\\flow-cytometry\\target\\classes");
+		System.setProperty("java.library.path", "C:\\Users\\Ajeet\\LOCI\\WiscScan Java\\flow-cytometry\\target\\classes");
+		FCHWCtrl fcHardware = (FCHWCtrl) Native.loadLibrary("FCHWCtrl.dll", FCHWCtrl.class);
+		fcHardware.DACinitLines();
+		debugVal = fcHardware.DACopenLine(4);
+		debugVal = fcHardware.DACstartLine(4);
+		debugVal = fcHardware.DACstopLine(4);
+		debugVal = fcHardware.DACcloseLine(4);
+	}
+	
 }

@@ -46,6 +46,7 @@ public class FlowCyto {
 		//for debug only
 		startImageJ();
 		IJ.log("lol");
+		new Find_Particle_Areas().testhardware();
 		//ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-bf.tif");
 		//ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/s2-int.tif");
 		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
