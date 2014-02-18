@@ -1,133 +1,128 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-		http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+    http://maven.apache.org/xsd/maven-v4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>loci</groupId>
-		<artifactId>pom-loci</artifactId>
-		<version>1.15</version>
-		<relativePath />
-	</parent>
+  <parent>
+    <groupId>loci</groupId>
+    <artifactId>pom-loci</artifactId>
+    <version>1.0</version>
+  </parent>
 
-	<artifactId>flow-cytometry</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+  <artifactId>flow-cytometry</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
 
-	<name>WiscScan Flow Cytometry</name>
-	<description>Server application for flow cytometry with WiscScan.</description>
-	<inceptionYear>2008</inceptionYear>
+  <name>WiscScan Flow Cytometry</name>
+  <description>Server application for flow cytometry with WiscScan.</description>
+  <inceptionYear>2008</inceptionYear>
 
-	<licenses>
-		<license>
-			<name>Simplified BSD License</name>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
+  <licenses>
+    <license>
+      <name>BSD</name>
+      <url>http://dev.loci.wisc.edu/svn/software/trunk/projects/flow-cytometry/LICENSE.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
-	<dependencies>
-		<dependency>
-			<groupId>${bio-formats.groupId}</groupId>
-			<artifactId>bio-formats</artifactId>
-			<version>${bio-formats.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${bio-formats.groupId}</groupId>
-			<artifactId>loci-common</artifactId>
-			<version>${bio-formats.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${bio-formats.groupId}</groupId>
-			<artifactId>ome-xml</artifactId>
-			<version>${bio-formats.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${imagej.groupId}</groupId>
-			<artifactId>ij</artifactId>
-			<version>${imagej1.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>visad</groupId>
-			<artifactId>visad-lite</artifactId>
-			<version>2.0.20070828</version>
-		</dependency>
-	</dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>${scifio.groupId}</groupId>
+      <artifactId>bio-formats</artifactId>
+      <version>${scifio.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${scifio.groupId}</groupId>
+      <artifactId>loci-common</artifactId>
+      <version>${scifio.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${scifio.groupId}</groupId>
+      <artifactId>ome-xml</artifactId>
+      <version>${scifio.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${imagej.groupId}</groupId>
+      <artifactId>ij</artifactId>
+      <version>${imagej1.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>visad</groupId>
+      <artifactId>visad-lite</artifactId>
+      <version>2.0.20070828</version>
+    </dependency>
+  </dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>loci.apps.flow.FlowCyto</mainClass>
-							<packageName>loci.apps.flow</packageName>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>license-maven-plugin</artifactId>
-				<configuration>
-					<licenseName>bsd_2</licenseName>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>loci.apps.flow.FlowCyto</mainClass>
+              <packageName>loci.apps.flow</packageName>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
-	<developers>
-		<developer>
-			<id>avivekan</id>
-			<name>Ajeet Vivekanandan</name>
-			<email>ajeet.vivekanandan@gmail.com</email>
-			<url>http://loci.wisc.edu/people/ajeet-vivekanandan</url>
-			<organization>UW-Madison LOCI</organization>
-			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
-			<roles>
-				<role>developer</role>
-			</roles>
-			<timezone>-6</timezone>
-		</developer>
-		<developer>
-			<name>Hidayath Ansari</name>
-			<url>http://loci.wisc.edu/people/mohammed-hidayath-ansari</url>
-			<organization>UW-Madison LOCI</organization>
-			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
-			<roles>
-				<role>developer</role>
-			</roles>
-			<timezone>-6</timezone>
-		</developer>
-		<developer>
-			<id>ctrueden</id>
-			<name>Curtis Rueden</name>
-			<email>ctrueden@wisc.edu</email>
-			<url>http://loci.wisc.edu/people/curtis-rueden</url>
-			<organization>UW-Madison LOCI</organization>
-			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
-			<roles>
-				<role>architect</role>
-				<role>developer</role>
-			</roles>
-			<timezone>-6</timezone>
-		</developer>
-	</developers>
+  <developers>
+    <developer>
+      <id>ajeet</id>
+      <name>Ajeet Vivekanandan</name>
+      <url>http://loci.wisc.edu/people/ajeet-vivekanandan</url>
+      <organization>UW-Madison LOCI</organization>
+      <organizationUrl>http://loci.wisc.edu/</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>-6</timezone>
+    </developer>
 
-	<scm>
-		<connection>scm:git:git://github.com/uw-loci/flow-cytometry</connection>
-		<developerConnection>scm:git:git@github.com:uw-loci/flow-cytometry</developerConnection>
-		<tag>HEAD</tag>
-		<url>https://github.com/uw-loci/flow-cytometry</url>
-	</scm>
+    <developer>
+      <id>ansari</id>
+      <name>Hidayath Ansari</name>
+      <url>http://loci.wisc.edu/people/mohammed-hidayath-ansari</url>
+      <organization>UW-Madison LOCI</organization>
+      <organizationUrl>http://loci.wisc.edu/</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>-6</timezone>
+    </developer>
 
-	<repositories>
-		<!-- NB: for project parent -->
-		<repository>
-			<id>imagej.public</id>
-			<url>http://maven.imagej.net/content/groups/public</url>
-		</repository>
-	</repositories>
+    <developer>
+      <id>curtis</id>
+      <name>Curtis Rueden</name>
+      <email>ctrueden@wisc.edu</email>
+      <url>http://loci.wisc.edu/people/curtis-rueden</url>
+      <organization>UW-Madison LOCI</organization>
+      <organizationUrl>http://loci.wisc.edu/</organizationUrl>
+      <roles>
+        <role>architect</role>
+        <role>developer</role>
+      </roles>
+      <timezone>-6</timezone>
+      <properties>
+        <picUrl>http://loci.wisc.edu/files/loci/images/people/curtis-2010.jpg</picUrl>
+      </properties>
+    </developer>
+  </developers>
+
+  <!-- NB: for project parent, in case of partial checkout -->
+  <repositories>
+    <repository>
+      <id>loci.releases</id>
+      <url>http://dev.loci.wisc.edu/maven2/releases</url>
+    </repository>
+    <repository>
+      <id>loci.snapshots</id>
+      <url>http://dev.loci.wisc.edu/maven2/snapshots</url>
+    </repository>
+  </repositories>
 
 </project>

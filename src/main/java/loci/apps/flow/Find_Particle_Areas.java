@@ -7,13 +7,13 @@
  * %%
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -29,6 +29,8 @@
  */
 
 package loci.apps.flow;
+
+import com.sun.jna.*;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -62,14 +64,14 @@ import com.sun.jna.Native;
 /**
  * ImageJ plugin to isolate cell particles in images and image
  * stacks. Intended to be used in realtime and offline analysis
- * of flow cytometry experiments. 
+ * of flow cytometry experiments.
  * <p>
  * Three main functions: determining sum pixel area of cell or
- * particle in brightfield images, determining sum pixel 
+ * particle in brightfield images, determining sum pixel
  * intensity count in intensity images, and calculating ratio
  * of particle intensity per particle area.
  * </p>
- * 
+ *
  * @author Ajeetesh Vivekanandan
  */
 public class Find_Particle_Areas implements PlugInFilter {
@@ -87,12 +89,12 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 	public Find_Particle_Areas(){
 	}
-	
+
 	public interface MPFC_Ctrl extends Library{
 		public boolean OnFlush(int intervalInMilliSec);
 		public boolean OpenLine(int lineNum);
 		public boolean CloseLine(int lineNum);
-		
+
 	}
 
 	public Find_Particle_Areas(ImagePlus image, ImagePlus brightfieldImage, ImagePlus intensityImage, String method, double minThresh, double sigma, int minSize, boolean excludeEdge, boolean ratioMode){
@@ -123,6 +125,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 	public static void main(String[] args){
 		//For debug
+
 //		new ImageJ();
 //		new IJ();
 //		System.out.println(System.getProperty("java.library.path"));
@@ -137,8 +140,8 @@ public class Find_Particle_Areas implements PlugInFilter {
 		DAQ.CloseLine(3);
 		DAQ.CloseLine(4);
 		DAQ.OnFlush(10000);
-		
-//		
+
+//
 //		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
 //		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
 //		intImage.show();
@@ -206,7 +209,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 				gd.addChoice("BRIGHTFIELD image:", availImages, availImages[0]);
 				gd.addChoice("INTENSITY image:", availImages, availImages[1]);
 				multipleImagesAvail = true;
-			} else 
+			} else
 				multipleImagesAvail = false;
 
 			gd.showDialog();
@@ -216,11 +219,11 @@ public class Find_Particle_Areas implements PlugInFilter {
 			thresholdMin= gd.getNextNumber();
 			sizeMin= (int) gd.getNextNumber();
 			gaussianSigma=gd.getNextNumber();
-			excludeOnEdge=gd.getNextBoolean(); 
+			excludeOnEdge=gd.getNextBoolean();
 			checkIndividualParticles= gd.getNextBoolean();
 			doFullStack = gd.getNextBoolean();
 			doRatio = multipleImagesAvail? gd.getNextBoolean():false;
-			//set up all required objects 
+			//set up all required objects
 			if(doRatio){
 				int index = gd.getNextChoiceIndex();
 				bfImpOrig = WindowManager.getImage(wList[index]);
@@ -231,7 +234,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 			} else if(doFullStack){
 				stackSize = imp.getStackSize();
 				currSlice = imp.getCurrentSlice();
-			} 
+			}
 			rt = new ResultsTable();
 			inPlugInMode = true;
 			Interpreter.batchMode=true;
@@ -246,13 +249,13 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 	/**
 	 * Creates a ratio mask stack for both brightfield and intensity images. Intensity image masks contain only
-	 * the pixels above threshold INSIDE the brightfield image's cell outline (if there is a cell). 
-	 * 
+	 * the pixels above threshold INSIDE the brightfield image's cell outline (if there is a cell).
+	 *
 	 * @return ImagePlus[] array of 2 ImagePlus objects, array[0] = brightfield Image, array[1] = intensity Image
 	 */
 	public ImagePlus[] createRatioMask(){
 		try{
-		//If we're using this plugin as a class for some other class/main instead of through ImageJ, assume 
+		//If we're using this plugin as a class for some other class/main instead of through ImageJ, assume
 		//	that class/main will handle how to display the data, just return the masks as an array...
 		//	Otherwise create and display info in a TextWindow below
 
@@ -261,7 +264,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 		boolean particleDetected = false;
 		boolean prevParticleDetected = false;
 		int numParticlesDetected = 0;
-		ImagePlus tempInt = null, tempBF = null, 
+		ImagePlus tempInt = null, tempBF = null,
 				bfMask = new ImagePlus("Cell Outlines"), intMask = new ImagePlus("Cell Intensity inside Outlines"),
 				duplicatedBF = null, duplicatedInt = null;
 		ImagePlus[] returnImages = new ImagePlus[2];
@@ -303,7 +306,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 				tempBF = findParticles(duplicatedBF, false, false);
 
 				duplicatedInt = duplicator.run(intImp, i, i);
-				
+
 				if (inPlugInMode) meanIntensities = duplicatedInt.getStatistics().getHistogram();
 
 				tempInt = findParticles(duplicatedInt, true, false);
@@ -353,7 +356,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 						resultsBF.add((float) bfAreas);
 						resultsIN.add((float) intAreas);
 						resultsRATIO.add((float) ratio);
-						
+
 						float intensityPixelCount=0;
 						float totalIntensity=0;
 						for(int j=(int)thresholdMin;j<meanIntensities.length;j++){
@@ -363,11 +366,11 @@ public class Find_Particle_Areas implements PlugInFilter {
 						float avgIntensity = totalIntensity/intensityPixelCount;
 						resultsMeanIN.add(avgIntensity);
 						resultsTotalIN.add((float) (avgIntensity*ratio));
-						
+
 						twindow.append(i + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + avgIntensity*ratio);
 					} else{
 						particleDetected = false;
-						prevParticleDetected = false; 
+						prevParticleDetected = false;
 					}
 					Interpreter.batchMode=false;
 					bfMask.show();
@@ -382,7 +385,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 				tempInt.close();
 				tempBF = null;
 				tempInt = null;
-				
+
 			}catch(NullPointerException e){
 				IJ.log("Null value encountered in slice " + i);
 			}catch(Throwable e){
@@ -443,10 +446,10 @@ public class Find_Particle_Areas implements PlugInFilter {
 				if(gb == null) gb = new GaussianBlur();
 				gb.blurGaussian(imageToAnalyze.getProcessor(), gaussianSigma, gaussianSigma, accuracy);
 				imageToAnalyze.getProcessor().setAutoThreshold("Minimum", true, ImageProcessor.BLACK_AND_WHITE_LUT);
-				
+
 				boolean batchMode = Interpreter.batchMode;
 				Interpreter.batchMode = true;
-				
+
 				particleAnalyzer.analyze(imageToAnalyze);
 				imageToAnalyze = particleAnalyzer.getOutputImage();
 				//copy and paste below code once more if an underestimation is desired
@@ -480,7 +483,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 		} else{
 			options |= ParticleAnalyzer.INCLUDE_HOLES|ParticleAnalyzer.CLEAR_WORKSHEET|ParticleAnalyzer.SHOW_MASKS;
 			particleAnalyzer = new ParticleAnalyzer(options, Measurements.AREA, rt, sizeMin, Double.POSITIVE_INFINITY);
-		}		
+		}
 	}
 
 	public void addImageToStack(ImagePlus mainImage, ImageProcessor imageToAdd, ImageStack correspondingStack){
@@ -528,7 +531,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 					currSlice++;
 					currentImage.close();
 				}
-				
+
 			} else{
 				boolean prevSlicePositive = false;
 				int numParticles = 0, numPositiveSlices = 0, avgParticleArea = 0;
@@ -571,7 +574,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 		duplicator = new Duplicator();
 		try{
 			ImagePlus duplicateImage = duplicator.run(imp, imp.getCurrentSlice(), imp.getCurrentSlice());
-			if(myMethod.equalsIgnoreCase("intensity")) 
+			if(myMethod.equalsIgnoreCase("intensity"))
 				duplicateImage = findParticles(duplicateImage, true, true);
 			else duplicateImage = findParticles(duplicateImage, false, true);
 			duplicateImage.close();
