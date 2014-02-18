@@ -30,13 +30,7 @@
 
 package loci.apps.flow;
 
-import java.awt.image.ColorModel;
-import java.awt.image.IndexColorModel;
-import java.util.ArrayList;
-import java.util.Collections;
-
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.WindowManager;
@@ -56,6 +50,14 @@ import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.text.TextWindow;
+
+import java.awt.image.ColorModel;
+import java.awt.image.IndexColorModel;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import com.sun.jna.Library;
+import com.sun.jna.Native;
 
 /**
  * ImageJ plugin to isolate cell particles in images and image
@@ -84,6 +86,13 @@ public class Find_Particle_Areas implements PlugInFilter {
 	private GaussianBlur gb;
 
 	public Find_Particle_Areas(){
+	}
+	
+	public interface MPFC_Ctrl extends Library{
+		public boolean OnFlush(int intervalInMilliSec);
+		public boolean OpenLine(int lineNum);
+		public boolean CloseLine(int lineNum);
+		
 	}
 
 	public Find_Particle_Areas(ImagePlus image, ImagePlus brightfieldImage, ImagePlus intensityImage, String method, double minThresh, double sigma, int minSize, boolean excludeEdge, boolean ratioMode){
@@ -114,15 +123,29 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 	public static void main(String[] args){
 		//For debug
-		new ImageJ();
-		new IJ();
-		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
-		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
-		intImage.show();
-		bfImage.show();
-
-		Find_Particle_Areas fpa = new Find_Particle_Areas();
-		fpa.run(null);
+//		new ImageJ();
+//		new IJ();
+//		System.out.println(System.getProperty("java.library.path"));
+//		System.out.println(Find_Particle_Areas.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+		System.loadLibrary("MPFC_Controller");
+		MPFC_Ctrl DAQ = (MPFC_Ctrl) Native.loadLibrary("MPFC_Controller",MPFC_Ctrl.class);
+		DAQ.OnFlush(3000);
+		DAQ.OpenLine(3);
+		DAQ.CloseLine(3);
+		DAQ.OpenLine(4);
+		DAQ.OpenLine(3);
+		DAQ.CloseLine(3);
+		DAQ.CloseLine(4);
+		DAQ.OnFlush(10000);
+		
+//		
+//		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
+//		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
+//		intImage.show();
+//		bfImage.show();
+//
+//		Find_Particle_Areas fpa = new Find_Particle_Areas();
+//		fpa.run(null);
 		System.out.println("done without error");
 	}
 
