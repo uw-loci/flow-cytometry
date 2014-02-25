@@ -31,6 +31,7 @@
 package loci.apps.flow;
 
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.WindowManager;
@@ -51,10 +52,24 @@ import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.text.TextWindow;
 
+import java.awt.AWTException;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.Queue;
+
+import javax.imageio.ImageIO;
+import javax.swing.JFrame;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
@@ -95,6 +110,14 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 	}
 
+	public static void captureScreen(String fileName) throws Exception {
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		Rectangle screenRectangle = new Rectangle(screenSize);
+		Robot robot = new Robot();
+		BufferedImage image = robot.createScreenCapture(screenRectangle);
+		ImageIO.write(image, "png", new File(fileName));
+	}
+
 	public Find_Particle_Areas(ImagePlus image, ImagePlus brightfieldImage, ImagePlus intensityImage, String method, double minThresh, double sigma, int minSize, boolean excludeEdge, boolean ratioMode){
 		imp = image;
 		bfImpOrig = brightfieldImage;
@@ -124,32 +147,121 @@ public class Find_Particle_Areas implements PlugInFilter {
 	public static void main(String[] args){
 		//For debug
 
-//		new ImageJ();
-//		new IJ();
-//		System.out.println(System.getProperty("java.library.path"));
-//		System.out.println(Find_Particle_Areas.class.getProtectionDomain().getCodeSource().getLocation().getFile());
-		
-		int deviceNum = 1, portNum = 0;
-		
-		System.loadLibrary("MPFC_Controller");
-		MPFC_Ctrl DAQ = (MPFC_Ctrl) Native.loadLibrary("MPFC_Controller",MPFC_Ctrl.class);
-		//DAQ.OnFlush(3000);
-		DAQ.OpenLine(deviceNum, portNum, 3);
-		DAQ.CloseLine(deviceNum, portNum, 3);
-		DAQ.OpenLine(deviceNum, portNum, 4);
-		DAQ.OpenLine(deviceNum, portNum, 3);
-		DAQ.CloseLine(deviceNum, portNum, 3);
-		DAQ.CloseLine(deviceNum, portNum, 4);
-		DAQ.OnFlush(3000);
+		//		new ImageJ();
+		//		new IJ();
+		//		System.out.println(System.getProperty("java.library.path"));
+		//		System.out.println(Find_Particle_Areas.class.getProtectionDomain().getCodeSource().getLocation().getFile());
 
-//
-//		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
-//		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
-//		intImage.show();
-//		bfImage.show();
-//
-//		Find_Particle_Areas fpa = new Find_Particle_Areas();
-//		fpa.run(null);
+		int deviceNum = 1, portNum = 0;
+
+		//		System.loadLibrary("MPFC_Controller");
+		//		MPFC_Ctrl DAQ = (MPFC_Ctrl) Native.loadLibrary("MPFC_Controller",MPFC_Ctrl.class);
+		//		//DAQ.OnFlush(3000);
+		//		DAQ.OpenLine(deviceNum, portNum, 3);
+		//		DAQ.CloseLine(deviceNum, portNum, 3);
+		//		DAQ.OpenLine(deviceNum, portNum, 4);
+		//		DAQ.OpenLine(deviceNum, portNum, 3);
+		//		DAQ.CloseLine(deviceNum, portNum, 3);
+		//		DAQ.CloseLine(deviceNum, portNum, 4);
+		//		DAQ.OnFlush(3000);
+
+//		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+//		Rectangle screenRectangle = new Rectangle(screenSize);
+//		Robot robot = null;
+//		try {
+//			robot = new Robot();
+//		} catch (AWTException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
+//		BufferedImage image;
+//		//ImageIO.write(image, "png", new File(fileName));
+//		ArrayList<BufferedImage> tempimages = new ArrayList<BufferedImage>();
+//		System.out.println("Start: " + System.nanoTime());
+//		try {
+//			for(int i=0; i<1000; i++){
+//				image = robot.createScreenCapture(screenRectangle);
+//				tempimages.add(image);
+//				image = null;
+//				System.out.println("i = " + i);
+//			}
+//			//captureScreen("D:\\Ajeet\\Desktop\\test1");
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		System.out.println("Start: " + System.nanoTime());
+//		System.out.println("num images collected = " + tempimages.size());
+//		tempimages.clear();
+//		tempimages = null;
+
+		//
+		//		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
+		//		ImagePlus intImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackINT.tif");
+		//		intImage.show();
+		//		bfImage.show();
+		//
+		//		Find_Particle_Areas fpa = new Find_Particle_Areas();
+		//		fpa.run(null);
+		
+		int numFramesToCollect = 100;
+		
+		byte[] r = new byte[256];
+		for(int ii=0 ; ii<256 ; ii++)
+			r[ii]=(byte)ii;
+		ColorModel  theCM = new IndexColorModel(8, 256, r,r,r);
+		
+		Rectangle rect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
+		ImageStack tempStack = new ImageStack(rect.width, rect.height, theCM);
+		ImagePlus tempImage = null;
+		
+		ArrayList<BufferedImage> tempI = new ArrayList<BufferedImage>();
+		
+		JFrame frame = new JFrame("Select screenshot area.");
+		frame.setSize(100,100);
+		frame.setResizable(true);
+//		com.sun.awt.AWTUtilities.setWindowOpacity(frame, 0.2f);
+		frame.setVisible(true);
+		if(true) return;
+		
+		long beforeTime = 0;
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		try{
+			Robot robot = new Robot();
+			int count = 0;
+			beforeTime = System.currentTimeMillis();
+			while(count < numFramesToCollect){
+				tempI.add(robot.createScreenCapture(rect));
+//				tempImage = new ImagePlus("Image "+ count,robot.createScreenCapture(rect));
+//				tempStack.addSlice("Image "+count, tempImage.getProcessor());
+				count++;
+			}
+		}catch (Exception e){
+			
+		}
+		long afterTime = System.currentTimeMillis();
+		double fps = (double)(afterTime - beforeTime)/1000;
+		fps = (double)numFramesToCollect/fps;
+		System.out.println("time taken: " + (afterTime-beforeTime) + "ms ...fps: " + fps);
+		
+		for(int i=0; i<tempI.size(); i++){
+			tempImage = new ImagePlus("Image "+(i+1), tempI.get(i));
+			tempStack.addSlice("Image "+(i+1), tempImage.getProcessor());
+			tempImage.close();
+			tempImage = null;
+		}
+		tempImage = new ImagePlus("Screenshots", tempStack);
+
+		new ImageJ();
+		new IJ();
+		tempImage.show();
+		Find_Particle_Areas fpa = new Find_Particle_Areas();
+		fpa.run(null);
 		System.out.println("done without error");
 	}
 
@@ -256,175 +368,175 @@ public class Find_Particle_Areas implements PlugInFilter {
 	 */
 	public ImagePlus[] createRatioMask(){
 		try{
-		//If we're using this plugin as a class for some other class/main instead of through ImageJ, assume
-		//	that class/main will handle how to display the data, just return the masks as an array...
-		//	Otherwise create and display info in a TextWindow below
+			//If we're using this plugin as a class for some other class/main instead of through ImageJ, assume
+			//	that class/main will handle how to display the data, just return the masks as an array...
+			//	Otherwise create and display info in a TextWindow below
 
-		double ratio=0, bfAreas=0, intAreas=0;
-		long[] meanIntensities = null;
-		boolean particleDetected = false;
-		boolean prevParticleDetected = false;
-		int numParticlesDetected = 0;
-		ImagePlus tempInt = null, tempBF = null,
-				bfMask = new ImagePlus("Cell Outlines"), intMask = new ImagePlus("Cell Intensity inside Outlines"),
-				duplicatedBF = null, duplicatedInt = null;
-		ImagePlus[] returnImages = new ImagePlus[2];
-		ImageStack intMaskStack = null, bfMaskStack = null;
-		ImageProcessor tempIP;
-		ImageStatistics stats;
-		duplicator = new Duplicator();
-		ic = new ImageCalculator();
-		gb = new GaussianBlur();
-		Roi tempRoi = null;
-		ThresholdToSelection tts = new ThresholdToSelection();
-		ArrayList<Float> resultsBF = new ArrayList<Float>();
-		ArrayList<Float> resultsIN = new ArrayList<Float>();
-		ArrayList<Float> resultsRATIO = new ArrayList<Float>();
-		ArrayList<Float> resultsMeanIN = new ArrayList<Float>();
-		ArrayList<Float> resultsTotalIN = new ArrayList<Float>();
+			double ratio=0, bfAreas=0, intAreas=0;
+			long[] meanIntensities = null;
+			boolean particleDetected = false;
+			boolean prevParticleDetected = false;
+			int numParticlesDetected = 0;
+			ImagePlus tempInt = null, tempBF = null,
+					bfMask = new ImagePlus("Cell Outlines"), intMask = new ImagePlus("Cell Intensity inside Outlines"),
+					duplicatedBF = null, duplicatedInt = null;
+			ImagePlus[] returnImages = new ImagePlus[2];
+			ImageStack intMaskStack = null, bfMaskStack = null;
+			ImageProcessor tempIP;
+			ImageStatistics stats;
+			duplicator = new Duplicator();
+			ic = new ImageCalculator();
+			gb = new GaussianBlur();
+			Roi tempRoi = null;
+			ThresholdToSelection tts = new ThresholdToSelection();
+			ArrayList<Float> resultsBF = new ArrayList<Float>();
+			ArrayList<Float> resultsIN = new ArrayList<Float>();
+			ArrayList<Float> resultsRATIO = new ArrayList<Float>();
+			ArrayList<Float> resultsMeanIN = new ArrayList<Float>();
+			ArrayList<Float> resultsTotalIN = new ArrayList<Float>();
 
-		//only needed if this method is executed through ImageJ
-		if(inPlugInMode){
-			twindow = new TextWindow("RATIO of Found Particles", "Slice \t Brightfield Area \t Intensity Area \t RATIO \t Mean Intensity above Threshold \t Total Intensity", "", 800, 300);
-			byte[] r = new byte[256];
-			for(int ii=0 ; ii<256 ; ii++)
-				r[ii]=(byte)ii;
-			ColorModel theCM = new IndexColorModel(8, 256, r,r,r);
-			intMaskStack = new ImageStack(intImp.getWidth(), intImp.getHeight(), theCM);
-			bfMaskStack = new ImageStack(bfImp.getWidth(), bfImp.getHeight(), theCM);
-		}
-
-		for (int i=bfImp.getCurrentSlice(); i<=bfImp.getStackSize(); i++){
-			try{
-				//have the user be able to observe which image the plugin is at
-				bfImpOrig.setSlice(i);
-				intImpOrig.setSlice(i);
-
-				//ALWAYS create duplicates for findParticles(...), otherwise ImagePlus objects get creates that are never closed
-				//	Using Duplicator() to get single slice, whereas ImagePlus.duplicate() duplicates entire stack.
-				duplicatedBF = duplicator.run(bfImp, i, i);
-
-				tempBF = findParticles(duplicatedBF, false, false);
-
-				duplicatedInt = duplicator.run(intImp, i, i);
-
-				if (inPlugInMode) meanIntensities = duplicatedInt.getStatistics().getHistogram();
-
-				tempInt = findParticles(duplicatedInt, true, false);
-
-				ic.run("AND", tempInt, tempBF);
-
-				//clean up
-				duplicatedBF.close();
-				duplicatedInt.close();
-
-				//once again, assume if this method is not called by ImageJ, then the caller will handle the data
-				if(inPlugInMode){
-					ratio=0; bfAreas=0; intAreas=0;
-
-					//GET total brightfield particles' area
-					tempIP = tempBF.getProcessor();
-					//this step is necessary to reset the processor's threshold for the ThresholdToSelection below
-					tempIP.setThreshold(1, 255, ImageProcessor.BLACK_AND_WHITE_LUT);
-					tempRoi = tts.convert(tempIP);
-					if(tempRoi!=null) {
-						tempIP.setRoi(tempRoi);
-						stats = ImageStatistics.getStatistics(tempIP, Measurements.AREA, tempBF.getCalibration());
-						bfAreas = stats.area;
-					}
-
-					addImageToStack(bfMask, tempIP, bfMaskStack);
-
-					//GET total intensity particles' area
-					tempIP = tempInt.getProcessor();
-					tempIP.setThreshold(1, 255, ImageProcessor.BLACK_AND_WHITE_LUT);
-					tempRoi = tts.convert(tempIP);
-					if(tempRoi!=null) {
-						tempIP.setRoi(tempRoi);
-						stats = ImageStatistics.getStatistics(tempIP, Measurements.AREA, tempBF.getCalibration());
-						intAreas = stats.area;
-					}
-
-					addImageToStack(intMask, tempIP, intMaskStack);
-
-					ratio = bfAreas==0? 0:intAreas/bfAreas;
-					if (ratio!=0){
-						particleDetected = true;
-						if (!prevParticleDetected){
-							numParticlesDetected++;
-							prevParticleDetected=true;
-						}
-						resultsBF.add((float) bfAreas);
-						resultsIN.add((float) intAreas);
-						resultsRATIO.add((float) ratio);
-
-						float intensityPixelCount=0;
-						float totalIntensity=0;
-						for(int j=(int)thresholdMin;j<meanIntensities.length;j++){
-							intensityPixelCount+=meanIntensities[j];
-							totalIntensity+=(j*meanIntensities[j]);
-						}
-						float avgIntensity = totalIntensity/intensityPixelCount;
-						resultsMeanIN.add(avgIntensity);
-						resultsTotalIN.add((float) (avgIntensity*ratio));
-
-						twindow.append(i + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + avgIntensity*ratio);
-					} else{
-						particleDetected = false;
-						prevParticleDetected = false;
-					}
-					Interpreter.batchMode=false;
-					bfMask.show();
-					intMask.show();
-					Interpreter.batchMode=true;
-
-				}
-				if(!doFullStack) i = bfImp.getStackSize()+1;
-				returnImages[0] = tempBF;
-				returnImages[1] = tempInt;
-				tempBF.close();
-				tempInt.close();
-				tempBF = null;
-				tempInt = null;
-
-			}catch(NullPointerException e){
-				IJ.log("Null value encountered in slice " + i);
-			}catch(Throwable e){
-				IJ.log("Error creating accurate mask on slice " + i);
+			//only needed if this method is executed through ImageJ
+			if(inPlugInMode){
+				twindow = new TextWindow("RATIO of Found Particles", "Slice \t Brightfield Area \t Intensity Area \t RATIO \t Mean Intensity above Threshold \t Total Intensity", "", 800, 300);
+				byte[] r = new byte[256];
+				for(int ii=0 ; ii<256 ; ii++)
+					r[ii]=(byte)ii;
+				ColorModel theCM = new IndexColorModel(8, 256, r,r,r);
+				intMaskStack = new ImageStack(intImp.getWidth(), intImp.getHeight(), theCM);
+				bfMaskStack = new ImageStack(bfImp.getWidth(), bfImp.getHeight(), theCM);
 			}
-		}
 
-		if(inPlugInMode){
+			for (int i=bfImp.getCurrentSlice(); i<=bfImp.getStackSize(); i++){
+				try{
+					//have the user be able to observe which image the plugin is at
+					bfImpOrig.setSlice(i);
+					intImpOrig.setSlice(i);
 
-			Collections.sort(resultsBF);
-			Collections.sort(resultsIN);
-			Collections.sort(resultsRATIO);
-			Collections.sort(resultsMeanIN);
-			Collections.sort(resultsTotalIN);
+					//ALWAYS create duplicates for findParticles(...), otherwise ImagePlus objects get creates that are never closed
+					//	Using Duplicator() to get single slice, whereas ImagePlus.duplicate() duplicates entire stack.
+					duplicatedBF = duplicator.run(bfImp, i, i);
 
-			float sumBF = 0;
-			for (float s : resultsBF) sumBF += s;
-			float sumIN = 0;
-			for (float s : resultsIN) sumIN += s;
-			float sumRatio = 0;
-			for (float s : resultsRATIO) sumRatio += s;
-			float sumMeanIn = 0;
-			for (float s : resultsMeanIN) sumMeanIn += s;
-			float sumTotalIn = 0;
-			for (float s : resultsTotalIN) sumTotalIn += s;
+					tempBF = findParticles(duplicatedBF, false, false);
 
-			twindow.append("Avg" + "\t" + sumBF/resultsBF.size() + "\t" + sumIN/resultsIN.size() + "\t" + sumRatio/resultsRATIO.size() + "\t" + sumMeanIn/resultsMeanIN.size() + "\t" + sumTotalIn/resultsTotalIN.size());
-			twindow.append("Min" + "\t" + resultsBF.get(0) + "\t" + resultsIN.get(0) + "\t" + resultsRATIO.get(0) + "\t" + resultsMeanIN.get(0) + "\t" + resultsTotalIN.get(0));
-			twindow.append("Max" + "\t" + resultsBF.get(resultsBF.size()-1) + "\t" + resultsIN.get(resultsIN.size()-1) + "\t" + resultsRATIO.get(resultsRATIO.size()-1) + "\t" + resultsMeanIN.get(resultsMeanIN.size()-1) + "\t" + resultsTotalIN.get(resultsTotalIN.size()-1));
-			twindow.append("Med" + "\t" + resultsBF.get(resultsBF.size()/2) + "\t" + resultsIN.get(resultsIN.size()/2) + "\t" + resultsRATIO.get(resultsRATIO.size()/2) + "\t" + resultsMeanIN.get(resultsMeanIN.size()/2) + "\t" + resultsTotalIN.get(resultsTotalIN.size()/2));
-			twindow.append("Total Particle count: " + numParticlesDetected);
-		}
-		else Interpreter.batchMode=false;
-		intMaskStack=null;
-		bfMaskStack=null;
-		tempInt = null;
-		tempBF = null;
-		return returnImages;
+					duplicatedInt = duplicator.run(intImp, i, i);
+
+					if (inPlugInMode) meanIntensities = duplicatedInt.getStatistics().getHistogram();
+
+					tempInt = findParticles(duplicatedInt, true, false);
+
+					ic.run("AND", tempInt, tempBF);
+
+					//clean up
+					duplicatedBF.close();
+					duplicatedInt.close();
+
+					//once again, assume if this method is not called by ImageJ, then the caller will handle the data
+					if(inPlugInMode){
+						ratio=0; bfAreas=0; intAreas=0;
+
+						//GET total brightfield particles' area
+						tempIP = tempBF.getProcessor();
+						//this step is necessary to reset the processor's threshold for the ThresholdToSelection below
+						tempIP.setThreshold(1, 255, ImageProcessor.BLACK_AND_WHITE_LUT);
+						tempRoi = tts.convert(tempIP);
+						if(tempRoi!=null) {
+							tempIP.setRoi(tempRoi);
+							stats = ImageStatistics.getStatistics(tempIP, Measurements.AREA, tempBF.getCalibration());
+							bfAreas = stats.area;
+						}
+
+						addImageToStack(bfMask, tempIP, bfMaskStack);
+
+						//GET total intensity particles' area
+						tempIP = tempInt.getProcessor();
+						tempIP.setThreshold(1, 255, ImageProcessor.BLACK_AND_WHITE_LUT);
+						tempRoi = tts.convert(tempIP);
+						if(tempRoi!=null) {
+							tempIP.setRoi(tempRoi);
+							stats = ImageStatistics.getStatistics(tempIP, Measurements.AREA, tempBF.getCalibration());
+							intAreas = stats.area;
+						}
+
+						addImageToStack(intMask, tempIP, intMaskStack);
+
+						ratio = bfAreas==0? 0:intAreas/bfAreas;
+						if (ratio!=0){
+							particleDetected = true;
+							if (!prevParticleDetected){
+								numParticlesDetected++;
+								prevParticleDetected=true;
+							}
+							resultsBF.add((float) bfAreas);
+							resultsIN.add((float) intAreas);
+							resultsRATIO.add((float) ratio);
+
+							float intensityPixelCount=0;
+							float totalIntensity=0;
+							for(int j=(int)thresholdMin;j<meanIntensities.length;j++){
+								intensityPixelCount+=meanIntensities[j];
+								totalIntensity+=(j*meanIntensities[j]);
+							}
+							float avgIntensity = totalIntensity/intensityPixelCount;
+							resultsMeanIN.add(avgIntensity);
+							resultsTotalIN.add((float) (avgIntensity*ratio));
+
+							twindow.append(i + "\t" + bfAreas + "\t" + intAreas + "\t" + ratio + "\t" + avgIntensity + "\t" + avgIntensity*ratio);
+						} else{
+							particleDetected = false;
+							prevParticleDetected = false;
+						}
+						Interpreter.batchMode=false;
+						bfMask.show();
+						intMask.show();
+						Interpreter.batchMode=true;
+
+					}
+					if(!doFullStack) i = bfImp.getStackSize()+1;
+					returnImages[0] = tempBF;
+					returnImages[1] = tempInt;
+					tempBF.close();
+					tempInt.close();
+					tempBF = null;
+					tempInt = null;
+
+				}catch(NullPointerException e){
+					IJ.log("Null value encountered in slice " + i);
+				}catch(Throwable e){
+					IJ.log("Error creating accurate mask on slice " + i);
+				}
+			}
+
+			if(inPlugInMode){
+
+				Collections.sort(resultsBF);
+				Collections.sort(resultsIN);
+				Collections.sort(resultsRATIO);
+				Collections.sort(resultsMeanIN);
+				Collections.sort(resultsTotalIN);
+
+				float sumBF = 0;
+				for (float s : resultsBF) sumBF += s;
+				float sumIN = 0;
+				for (float s : resultsIN) sumIN += s;
+				float sumRatio = 0;
+				for (float s : resultsRATIO) sumRatio += s;
+				float sumMeanIn = 0;
+				for (float s : resultsMeanIN) sumMeanIn += s;
+				float sumTotalIn = 0;
+				for (float s : resultsTotalIN) sumTotalIn += s;
+
+				twindow.append("Avg" + "\t" + sumBF/resultsBF.size() + "\t" + sumIN/resultsIN.size() + "\t" + sumRatio/resultsRATIO.size() + "\t" + sumMeanIn/resultsMeanIN.size() + "\t" + sumTotalIn/resultsTotalIN.size());
+				twindow.append("Min" + "\t" + resultsBF.get(0) + "\t" + resultsIN.get(0) + "\t" + resultsRATIO.get(0) + "\t" + resultsMeanIN.get(0) + "\t" + resultsTotalIN.get(0));
+				twindow.append("Max" + "\t" + resultsBF.get(resultsBF.size()-1) + "\t" + resultsIN.get(resultsIN.size()-1) + "\t" + resultsRATIO.get(resultsRATIO.size()-1) + "\t" + resultsMeanIN.get(resultsMeanIN.size()-1) + "\t" + resultsTotalIN.get(resultsTotalIN.size()-1));
+				twindow.append("Med" + "\t" + resultsBF.get(resultsBF.size()/2) + "\t" + resultsIN.get(resultsIN.size()/2) + "\t" + resultsRATIO.get(resultsRATIO.size()/2) + "\t" + resultsMeanIN.get(resultsMeanIN.size()/2) + "\t" + resultsTotalIN.get(resultsTotalIN.size()/2));
+				twindow.append("Total Particle count: " + numParticlesDetected);
+			}
+			else Interpreter.batchMode=false;
+			intMaskStack=null;
+			bfMaskStack=null;
+			tempInt = null;
+			tempBF = null;
+			return returnImages;
 		} catch(Throwable e){
 			IJ.log("Error with creating ratio masks in plugin");
 			IJ.log(e.getLocalizedMessage().toString());
@@ -489,11 +601,11 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 	public void addImageToStack(ImagePlus mainImage, ImageProcessor imageToAdd, ImageStack correspondingStack){
 		try{
-		//very useful to add any single ImagePlus to an existing stack
-		correspondingStack.addSlice("", imageToAdd);
-		mainImage.setStack(correspondingStack);
-		mainImage.setSlice(mainImage.getStackSize());
-		mainImage.unlock();
+			//very useful to add any single ImagePlus to an existing stack
+			correspondingStack.addSlice("", imageToAdd);
+			mainImage.setStack(correspondingStack);
+			mainImage.setSlice(mainImage.getStackSize());
+			mainImage.unlock();
 		} catch (Throwable e){
 			IJ.log("error in adding image to stack: " + e);
 		}
@@ -571,7 +683,7 @@ public class Find_Particle_Areas implements PlugInFilter {
 	}
 
 	public float[] analyzeIndividualParticles(){
-//		rt = new ResultsTable();
+		//		rt = new ResultsTable();
 		duplicator = new Duplicator();
 		try{
 			ImagePlus duplicateImage = duplicator.run(imp, imp.getCurrentSlice(), imp.getCurrentSlice());
@@ -581,8 +693,8 @@ public class Find_Particle_Areas implements PlugInFilter {
 			duplicateImage.close();
 			duplicateImage=null;
 			if (rt.getCounter()>0)
-//				IJ.log("Counter: " + rt.getCounter());
-			return rt.getColumn(rt.getColumnIndex("Area"));
+				//				IJ.log("Counter: " + rt.getCounter());
+				return rt.getColumn(rt.getColumnIndex("Area"));
 		}catch(Throwable e){
 			IJ.log("Error encountered while analyzing individual particles.");
 			IJ.log(e.getStackTrace().toString());
