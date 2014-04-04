@@ -52,27 +52,18 @@ import ij.process.ImageProcessor;
 import ij.process.ImageStatistics;
 import ij.text.TextWindow;
 
-import java.awt.AWTException;
-import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.Queue;
 
-import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
 import com.sun.jna.Library;
-import com.sun.jna.Native;
 
 /**
  * ImageJ plugin to isolate cell particles in images and image
@@ -108,14 +99,6 @@ public class Find_Particle_Areas implements PlugInFilter {
 		public boolean OpenLine(int deviceNum, int portNum, int lineNum);
 		public boolean CloseLine(int deviceNum, int portNum, int lineNum);
 
-	}
-
-	public static void captureScreen(String fileName) throws Exception {
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		Rectangle screenRectangle = new Rectangle(screenSize);
-		Robot robot = new Robot();
-		BufferedImage image = robot.createScreenCapture(screenRectangle);
-		ImageIO.write(image, "png", new File(fileName));
 	}
 
 	public Find_Particle_Areas(ImagePlus image, ImagePlus brightfieldImage, ImagePlus intensityImage, String method, double minThresh, double sigma, int minSize, boolean excludeEdge, boolean ratioMode){
@@ -154,46 +137,16 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 		int deviceNum = 1, portNum = 0;
 
-		//		System.loadLibrary("MPFC_Controller");
-		//		MPFC_Ctrl DAQ = (MPFC_Ctrl) Native.loadLibrary("MPFC_Controller",MPFC_Ctrl.class);
-		//		//DAQ.OnFlush(3000);
-		//		DAQ.OpenLine(deviceNum, portNum, 3);
-		//		DAQ.CloseLine(deviceNum, portNum, 3);
-		//		DAQ.OpenLine(deviceNum, portNum, 4);
-		//		DAQ.OpenLine(deviceNum, portNum, 3);
-		//		DAQ.CloseLine(deviceNum, portNum, 3);
-		//		DAQ.CloseLine(deviceNum, portNum, 4);
-		//		DAQ.OnFlush(3000);
-
-//		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-//		Rectangle screenRectangle = new Rectangle(screenSize);
-//		Robot robot = null;
-//		try {
-//			robot = new Robot();
-//		} catch (AWTException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		BufferedImage image;
-//		//ImageIO.write(image, "png", new File(fileName));
-//		ArrayList<BufferedImage> tempimages = new ArrayList<BufferedImage>();
-//		System.out.println("Start: " + System.nanoTime());
-//		try {
-//			for(int i=0; i<1000; i++){
-//				image = robot.createScreenCapture(screenRectangle);
-//				tempimages.add(image);
-//				image = null;
-//				System.out.println("i = " + i);
-//			}
-//			//captureScreen("D:\\Ajeet\\Desktop\\test1");
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		System.out.println("Start: " + System.nanoTime());
-//		System.out.println("num images collected = " + tempimages.size());
-//		tempimages.clear();
-//		tempimages = null;
+//		System.loadLibrary("MPFC_Controller");
+//		MPFC_Ctrl DAQ = (MPFC_Ctrl) Native.loadLibrary("MPFC_Controller",MPFC_Ctrl.class);
+//		//DAQ.OnFlush(3000);
+//		DAQ.OpenLine(deviceNum, portNum, 3);
+//		DAQ.CloseLine(deviceNum, portNum, 3);
+//		DAQ.OpenLine(deviceNum, portNum, 4);
+//		DAQ.OpenLine(deviceNum, portNum, 3);
+//		DAQ.CloseLine(deviceNum, portNum, 3);
+//		DAQ.CloseLine(deviceNum, portNum, 4);
+//		DAQ.OnFlush(3000);
 
 		//
 		//		ImagePlus bfImage = IJ.openImage("C:/Users/Ajeet/Desktop/bigStackBF.tif");
@@ -203,27 +156,27 @@ public class Find_Particle_Areas implements PlugInFilter {
 		//
 		//		Find_Particle_Areas fpa = new Find_Particle_Areas();
 		//		fpa.run(null);
-		
+
 		int numFramesToCollect = 100;
-		
+
 		byte[] r = new byte[256];
 		for(int ii=0 ; ii<256 ; ii++)
 			r[ii]=(byte)ii;
 		ColorModel  theCM = new IndexColorModel(8, 256, r,r,r);
-		
+
 		Rectangle rect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
 		ImageStack tempStack = new ImageStack(rect.width, rect.height, theCM);
 		ImagePlus tempImage = null;
-		
+
 		ArrayList<BufferedImage> tempI = new ArrayList<BufferedImage>();
-		
+
 		JFrame frame = new JFrame("Select screenshot area.");
 		frame.setSize(100,100);
 		frame.setResizable(true);
-//		com.sun.awt.AWTUtilities.setWindowOpacity(frame, 0.2f);
+		//		com.sun.awt.AWTUtilities.setWindowOpacity(frame, 0.2f);
 		frame.setVisible(true);
-		if(true) return;
-		
+		//if(true) return;
+
 		long beforeTime = 0;
 		try {
 			Thread.sleep(5000);
@@ -237,20 +190,21 @@ public class Find_Particle_Areas implements PlugInFilter {
 			beforeTime = System.currentTimeMillis();
 			while(count < numFramesToCollect){
 				tempI.add(robot.createScreenCapture(rect));
-//				tempImage = new ImagePlus("Image "+ count,robot.createScreenCapture(rect));
-//				tempStack.addSlice("Image "+count, tempImage.getProcessor());
+				//				tempImage = new ImagePlus("Image "+ count,robot.createScreenCapture(rect));
+				//				tempStack.addSlice("Image "+count, tempImage.getProcessor());
 				count++;
 			}
 		}catch (Exception e){
-			
+
 		}
 		long afterTime = System.currentTimeMillis();
 		double fps = (double)(afterTime - beforeTime)/1000;
 		fps = (double)numFramesToCollect/fps;
 		System.out.println("time taken: " + (afterTime-beforeTime) + "ms ...fps: " + fps);
-		
+
 		for(int i=0; i<tempI.size(); i++){
 			tempImage = new ImagePlus("Image "+(i+1), tempI.get(i));
+			tempImage.setProcessor(tempImage.getTitle(), tempImage.getProcessor().convertToByte(true));
 			tempStack.addSlice("Image "+(i+1), tempImage.getProcessor());
 			tempImage.close();
 			tempImage = null;
@@ -260,8 +214,11 @@ public class Find_Particle_Areas implements PlugInFilter {
 		new ImageJ();
 		new IJ();
 		tempImage.show();
+		ImagePlus bfImage = IJ.openImage("D:/Ajeet/Desktop/Screenshots_8bit.tif");
+		bfImage.show();
 		Find_Particle_Areas fpa = new Find_Particle_Areas();
-		fpa.run(null);
+		fpa.setup("", bfImage);
+		fpa.run(tempImage.getProcessor());
 		System.out.println("done without error");
 	}
 
@@ -565,13 +522,14 @@ public class Find_Particle_Areas implements PlugInFilter {
 
 				particleAnalyzer.analyze(imageToAnalyze);
 				imageToAnalyze = particleAnalyzer.getOutputImage();
+				if(imageToAnalyze != null)
 				//copy and paste below code once more if an underestimation is desired
 				((ByteProcessor)(imageToAnalyze.getProcessor())).erode(1, 0);
 				for(int i = 0; i < rt.getCounter(); i++)
 					rt.deleteRow(i);
 				rt.reset();
-				particleAnalyzer.analyze(imageToAnalyze);
-				imageToAnalyze = particleAnalyzer.getOutputImage();
+//				particleAnalyzer.analyze(imageToAnalyze);
+//				imageToAnalyze = particleAnalyzer.getOutputImage();
 				Interpreter.batchMode = batchMode;
 			}
 			return imageToAnalyze;
