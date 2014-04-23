@@ -21,7 +21,6 @@
   <licenses>
     <license>
       <name>BSD</name>
-      <url>http://dev.loci.wisc.edu/svn/software/trunk/projects/flow-cytometry/LICENSE.txt</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
