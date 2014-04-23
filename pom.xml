@@ -1,118 +1,118 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-    http://maven.apache.org/xsd/maven-v4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+		http://maven.apache.org/xsd/maven-v4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>loci</groupId>
-    <artifactId>pom-loci</artifactId>
-    <version>1.19</version>
-  </parent>
+	<parent>
+		<groupId>loci</groupId>
+		<artifactId>pom-loci</artifactId>
+		<version>1.19</version>
+	</parent>
 
-  <artifactId>flow-cytometry</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+	<artifactId>flow-cytometry</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
 
-  <name>WiscScan Flow Cytometry</name>
-  <description>Server application for flow cytometry with WiscScan.</description>
-  <inceptionYear>2008</inceptionYear>
+	<name>WiscScan Flow Cytometry</name>
+	<description>Server application for flow cytometry with WiscScan.</description>
+	<inceptionYear>2008</inceptionYear>
 
-  <licenses>
-    <license>
-      <name>BSD</name>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
+	<licenses>
+		<license>
+			<name>BSD</name>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
-  <dependencies>
-    <dependency>
-      <groupId>net.imagej</groupId>
-      <artifactId>ij</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ome</groupId>
-      <artifactId>formats-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ome</groupId>
-      <artifactId>formats-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ome</groupId>
-      <artifactId>ome-xml</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>visad</groupId>
-      <artifactId>visad-lite</artifactId>
-      <version>2.0.20070828</version>
-    </dependency>
-  </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>ij</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>formats-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>formats-common</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>ome-xml</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>visad</groupId>
+			<artifactId>visad-lite</artifactId>
+			<version>2.0.20070828</version>
+		</dependency>
+	</dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>loci.apps.flow.FlowCyto</mainClass>
-              <packageName>loci.apps.flow</packageName>
-            </manifest>
-          </archive>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>loci.apps.flow.FlowCyto</mainClass>
+							<packageName>loci.apps.flow</packageName>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
-  <developers>
-    <developer>
-      <id>ajeet</id>
-      <name>Ajeet Vivekanandan</name>
-      <url>http://loci.wisc.edu/people/ajeet-vivekanandan</url>
-      <organization>UW-Madison LOCI</organization>
-      <organizationUrl>http://loci.wisc.edu/</organizationUrl>
-      <roles>
-        <role>developer</role>
-      </roles>
-      <timezone>-6</timezone>
-    </developer>
+	<developers>
+		<developer>
+			<id>ajeet</id>
+			<name>Ajeet Vivekanandan</name>
+			<url>http://loci.wisc.edu/people/ajeet-vivekanandan</url>
+			<organization>UW-Madison LOCI</organization>
+			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>-6</timezone>
+		</developer>
 
-    <developer>
-      <id>ansari</id>
-      <name>Hidayath Ansari</name>
-      <url>http://loci.wisc.edu/people/mohammed-hidayath-ansari</url>
-      <organization>UW-Madison LOCI</organization>
-      <organizationUrl>http://loci.wisc.edu/</organizationUrl>
-      <roles>
-        <role>developer</role>
-      </roles>
-      <timezone>-6</timezone>
-    </developer>
+		<developer>
+			<id>ansari</id>
+			<name>Hidayath Ansari</name>
+			<url>http://loci.wisc.edu/people/mohammed-hidayath-ansari</url>
+			<organization>UW-Madison LOCI</organization>
+			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>-6</timezone>
+		</developer>
 
-    <developer>
-      <id>curtis</id>
-      <name>Curtis Rueden</name>
-      <email>ctrueden@wisc.edu</email>
-      <url>http://loci.wisc.edu/people/curtis-rueden</url>
-      <organization>UW-Madison LOCI</organization>
-      <organizationUrl>http://loci.wisc.edu/</organizationUrl>
-      <roles>
-        <role>architect</role>
-        <role>developer</role>
-      </roles>
-      <timezone>-6</timezone>
-      <properties>
-        <picUrl>http://loci.wisc.edu/files/loci/images/people/curtis-2010.jpg</picUrl>
-      </properties>
-    </developer>
-  </developers>
+		<developer>
+			<id>curtis</id>
+			<name>Curtis Rueden</name>
+			<email>ctrueden@wisc.edu</email>
+			<url>http://loci.wisc.edu/people/curtis-rueden</url>
+			<organization>UW-Madison LOCI</organization>
+			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+			<timezone>-6</timezone>
+			<properties>
+				<picUrl>http://loci.wisc.edu/files/loci/images/people/curtis-2010.jpg</picUrl>
+			</properties>
+		</developer>
+	</developers>
 
-  <repositories>
-    <repository>
-      <id>imagej.public</id>
-      <url>http://maven.imagej.net/content/groups/public</url>
-    </repository>
-  </repositories>
+	<repositories>
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+	</repositories>
 
 </project>
