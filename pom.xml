@@ -28,24 +28,20 @@
 
   <dependencies>
     <dependency>
-      <groupId>${scifio.groupId}</groupId>
-      <artifactId>bio-formats</artifactId>
-      <version>${scifio.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${scifio.groupId}</groupId>
-      <artifactId>loci-common</artifactId>
-      <version>${scifio.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${scifio.groupId}</groupId>
-      <artifactId>ome-xml</artifactId>
-      <version>${scifio.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${imagej.groupId}</groupId>
+      <groupId>net.imagej</groupId>
       <artifactId>ij</artifactId>
-      <version>${imagej1.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>ome</groupId>
+      <artifactId>formats-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ome</groupId>
+      <artifactId>formats-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ome</groupId>
+      <artifactId>ome-xml</artifactId>
     </dependency>
     <dependency>
       <groupId>visad</groupId>
