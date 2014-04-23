@@ -42,6 +42,12 @@
 			<groupId>ome</groupId>
 			<artifactId>ome-xml</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>3.0.9</version>
+		</dependency>
 		<dependency>
 			<groupId>visad</groupId>
 			<artifactId>visad-lite</artifactId>
