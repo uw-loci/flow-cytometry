@@ -228,11 +228,13 @@ public class Find_Particle_Areas implements PlugInFilter {
 	 * @param arg String arg0
 	 * @param image ImagePlus image to run calculation on
 	 */
+	@Override
 	public int setup(String arg, ImagePlus image) {
 		imp = image;
 		return DOES_8G | NO_CHANGES;
 	}
 
+	@Override
 	public void run(ImageProcessor arg0) {
 		if(!createDialog()){
 			//	IJ.showMessage("Please enter or choose correct parameters");
