@@ -78,6 +78,7 @@
 	</ciManagement>
 
 	<properties>
+		<main-class>loci.apps.flow.FlowCyto</main-class>
 		<package-name>loci.apps.flow</package-name>
 		<license.licenseName>bsd_2</license.licenseName>
 		<license.copyrightOwners>Board of Regents of the University of
@@ -120,20 +121,4 @@ Wisconsin-Madison.</license.copyrightOwners>
 			<version>2.0.20070828</version>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>loci.apps.flow.FlowCyto</mainClass>
-							<packageName>loci.apps.flow</packageName>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>
